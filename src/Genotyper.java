@@ -1,6 +1,8 @@
 
-public class Genotyper {
 
+
+public class Genotyper {
+	
 	/**
 	 * @param args
 	 */
