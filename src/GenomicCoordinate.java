@@ -28,4 +28,9 @@ class GenomicCoordinate implements Comparable<GenomicCoordinate>{
 			return true;
 		return false;
 	}
+	public int distanceTo(GenomicCoordinate other){
+		if(!onSameChromosome(other))
+			return Integer.MAX_VALUE;
+		return Math.abs(this.pos - other.pos);
+	}
 }
