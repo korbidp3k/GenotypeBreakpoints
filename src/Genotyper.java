@@ -25,6 +25,7 @@ public class Genotyper {
 		GenomicNode newNode = new GenomicNode(coordinate, e);
 		e.setNode(newNode, useFirstCoordinate);
 		nodeSet.add(newNode);
+		System.out.println("test");
 	}
 	
 	enum SV_ALGORITHM {SOCRATES, DELLY};
