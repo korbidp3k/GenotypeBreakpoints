@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -27,6 +28,8 @@ public class Genotyper {
 		nodeSet.add(newNode);
 
 	}
+	
+	
 	
 	enum SV_ALGORITHM {SOCRATES, DELLY};
 	
@@ -98,6 +101,8 @@ public class Genotyper {
 		}
 		
 		//iterate through node sets and merge nodes where necessary
+		//also checks each node for redundant members
+		//TODO: handle redundant members
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
 			GenomicNode lastNode = null, currentNode = null;
 			Iterator<GenomicNode> iterator = tableEntry.getValue().iterator();
@@ -109,14 +114,85 @@ public class Genotyper {
 					iterator.remove();
 					nodesMerged++;
 				} else {
+					if(lastNode != null)
+						lastNode.checkForRedundantEvents();
 					lastNode = currentNode;
 				}
 			}
+			if(lastNode != null)
+				lastNode.checkForRedundantEvents();
 			System.out.println("Nodes Merged: "+nodesMerged);
 		}
 		
 		//iterate through node sets again, and genotype events
-		//...
+		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
+			for(GenomicNode currentNode: tableEntry.getValue()){
+				//iterate through all event-event pairing in this node and assess for complex events
+				Event e1, e2;
+				HashSet<Event> removeEvents = new HashSet<Event>();
+				HashSet<ComplexEvent> newComplexEvents = new HashSet<ComplexEvent>();
+				ComplexEvent newComplexEvent = null;
+				for(int i=0; i<currentNode.getEvents().size(); i++){
+					e1 = currentNode.getEvents().get(i);
+					for(int j=0; j<currentNode.getEvents().size(); j++){
+						e2 = currentNode.getEvents().get(j);
+						if(e1 == e2 || removeEvents.contains(e2) || removeEvents.contains(e1))
+							continue;
+						switch(e1.getType()){
+							//inversions
+							case INV1: {
+								if(e2.getType() == EVENT_TYPE.INV2 && Event.sameNodeSets(e1, e2)){
+									System.out.println("Complex inversion between "+e1+" and "+e2);
+									newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_INVERSION, (new Event[] {e1, e2}), currentNode);
+								}
+								else {
+									//unknown pairing
+								}
+								break;
+							}
+							//duplications and translocations
+							case DEL: {
+								if(e2.getType() == EVENT_TYPE.TAN){
+									GenomicNode other1 = e1.otherNode(currentNode), other2 = e2.otherNode(currentNode);
+									if(other1.compareTo(other2) < 0 && currentNode.compareTo(other1) < 0
+											|| other2.compareTo(other1) < 0 && other1.compareTo(currentNode) < 0){
+										if(other1.existsDeletionEventTo(other2) != null){
+											System.out.println("Translocation between "+e1+ " and "+ e2);
+											newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_TRANSLOCATION, (new Event[] {e1, e2, other1.existsDeletionEventTo(other2)}), currentNode);
+										}
+										else {
+											System.out.println("Duplication between "+e1+ " and "+ e2);
+											newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_INVERSION, (new Event[] {e1, e2}), currentNode);
+										}
+									}
+								}
+								break;
+							}
+							case INV2: //handled as INV1 above
+							
+							default: //don't even attempt other types
+						}
+						//check if a new complex event has been generated
+						if(newComplexEvent != null){
+							//-> add events to cleanup and break current loop
+							newComplexEvents.add(newComplexEvent);
+							for(Event e: newComplexEvent.getEventsInvolvedInComplexEvent()){
+								removeEvents.add(e);
+							}
+							newComplexEvent = null;
+							break; //break the for j loop, as this guy is already paired
+						}
+					}
+				}
+				//all event pairings have been investigated 
+				//-> clean up some stuff by removing events and adding the new complex ones.
+				for(Event e: removeEvents){
+					e.getNode(true).getEvents().remove(e);
+					e.getNode(false).getEvents().remove(e);
+				}
+				currentNode.getEvents().addAll(newComplexEvents);
+			}
+		}
 	}
 
 }

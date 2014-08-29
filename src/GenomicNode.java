@@ -32,7 +32,12 @@ public class GenomicNode implements Comparable<GenomicNode>{
 
 	@Override
 	public int compareTo(GenomicNode other) {
-		return this.start.compareTo(other.start);
+		//this compare method never spits out equal, so that the adding to TreeSets 
+		//would not ignore them.
+		int compare = this.start.compareTo(other.start);
+		if(compare == 0)
+			return -1;
+		return compare;
 	}
 	
 	/*
@@ -60,4 +65,24 @@ public class GenomicNode implements Comparable<GenomicNode>{
 		}
 	}
 
+	public void checkForRedundantEvents(){
+		Event e1, e2;
+		for(int i=0; i<events.size(); i++){
+			e1 = events.get(i);
+			for(int j=i+1; j< events.size(); j++){
+				e2=events.get(j);
+				if(Event.sameNodeSets(e1,e2) && e1.getType() == e2.getType()){
+					System.out.println("Redundant events identified");
+				}
+			}
+		}
+	}
+	
+	public Event existsDeletionEventTo(GenomicNode other){
+		for(Event e: this.events){
+			if(e.otherNode(this) == other && e.getType()==EVENT_TYPE.DEL)
+				return e;
+		}
+		return null;
+	}
 }

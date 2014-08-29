@@ -1,7 +1,7 @@
 import java.util.StringTokenizer;
 
 
-enum EVENT_TYPE {INS, INV1, INV2, DEL, TAN, TRAN, DUP, INVTX1, INVTX2, ITX1, ITX2, XXX};
+enum EVENT_TYPE {INS, INV1, INV2, DEL, TAN, INVTX1, INVTX2, ITX1, ITX2, XXX, COMPLEX_INVERSION, COMPLEX_DUPLICATION, COMPLEX_TRANSLOCATION};
 
 public class Event {
 
@@ -135,5 +135,28 @@ public class Event {
 			return myNodes[0];
 		else
 			return myNodes[1];
+	}
+	
+	public static boolean sameNodeSets(Event e1, Event e2){
+		if(e1.myNodes[0] == e2.myNodes[0] && e1.myNodes[1] == e2.myNodes[1] 
+				|| e1.myNodes[0] == e2.myNodes[1] && e1.myNodes[1] == e2.myNodes[0])
+			return true;
+		return false;		
+	}
+	
+	@Override
+	public String toString() {
+		return c1+"<->"+c2+" "+type;
+	}
+	
+	public GenomicNode otherNode(GenomicNode node){
+		if(myNodes[0] == node) {
+			return myNodes[1];
+		}
+		if(myNodes[1] == node) {
+			return myNodes[0];
+		}
+		System.err.println("otherNode: query node is not assiciated with Event!");
+		return null;
 	}
 }

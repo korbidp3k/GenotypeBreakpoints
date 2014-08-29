@@ -33,4 +33,8 @@ class GenomicCoordinate implements Comparable<GenomicCoordinate>{
 			return Integer.MAX_VALUE;
 		return Math.abs(this.pos - other.pos);
 	}
+	@Override
+	public String toString() {
+		return chr+":"+pos;
+	}
 }
