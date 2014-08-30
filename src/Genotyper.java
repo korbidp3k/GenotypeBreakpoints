@@ -142,8 +142,10 @@ public class Genotyper {
 							//inversions
 							case INV1: {
 								if(e2.getType() == EVENT_TYPE.INV2 && Event.sameNodeSets(e1, e2)){
-									System.out.println("Complex inversion between "+e1+" and "+e2);
-									newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_INVERSION, (new Event[] {e1, e2}), currentNode);
+									//System.out.println("Complex inversion between "+e1+" and "+e2);
+									GenomicCoordinate invstart = (e1.getC1().compareTo(e1.getC2()) < 0? e1.getC1() : e1.getC2());
+									GenomicCoordinate invend   = (e2.getC2().compareTo(e2.getC1()) < 0? e2.getC1() : e2.getC2());
+									newComplexEvent = new ComplexEvent(invstart, invend, EVENT_TYPE.COMPLEX_INVERSION, (new Event[] {e1, e2}), currentNode);
 								}
 								else {
 									//unknown pairing
@@ -157,12 +159,12 @@ public class Genotyper {
 									if(other1.compareTo(other2) < 0 && currentNode.compareTo(other1) < 0
 											|| other2.compareTo(other1) < 0 && other1.compareTo(currentNode) < 0){
 										if(other1.existsDeletionEventTo(other2) != null){
-											System.out.println("Translocation between "+e1+ " and "+ e2);
+											//System.out.println("Translocation between "+e1+ " and "+ e2);
 											newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_TRANSLOCATION, (new Event[] {e1, e2, other1.existsDeletionEventTo(other2)}), currentNode);
 										}
 										else {
-											System.out.println("Duplication between "+e1+ " and "+ e2);
-											newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_INVERSION, (new Event[] {e1, e2}), currentNode);
+											//System.out.println("Duplication between "+e1+ " and "+ e2);
+											newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_DUPLICATION, (new Event[] {e1, e2}), currentNode);
 										}
 									}
 								}
@@ -180,7 +182,7 @@ public class Genotyper {
 								removeEvents.add(e);
 							}
 							newComplexEvent = null;
-							break; //break the for j loop, as this guy is already paired
+							break; //break the for-j loop, as this guy is already paired
 						}
 					}
 				}
@@ -191,6 +193,27 @@ public class Genotyper {
 					e.getNode(false).getEvents().remove(e);
 				}
 				currentNode.getEvents().addAll(newComplexEvents);
+			}
+		}
+		
+		//while we're at it: let's run through the nodes again!
+		//this time for output
+		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
+			for(GenomicNode currentNode: tableEntry.getValue()){
+				if(currentNode.getEvents().size() > 1){
+					System.out.println("Node might be shifty: "+currentNode.getEvents().size()+" members!");
+				}
+				HashSet<Event> skipEvents = new HashSet<Event>();
+				for(Event e: currentNode.getEvents()){
+					if(skipEvents.contains(e))
+						continue;
+					System.out.println(e);
+					if(e.otherNode(currentNode) == currentNode){
+						skipEvents.add(e);
+					} else {
+						e.otherNode(currentNode).getEvents().remove(e);
+					}
+				}
 			}
 		}
 	}
