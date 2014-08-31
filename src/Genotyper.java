@@ -158,13 +158,55 @@ public class Genotyper {
 									GenomicNode other1 = e1.otherNode(currentNode), other2 = e2.otherNode(currentNode);
 									if(other1.compareTo(other2) < 0 && currentNode.compareTo(other1) < 0
 											|| other2.compareTo(other1) < 0 && other1.compareTo(currentNode) < 0){
-										if(other1.existsDeletionEventTo(other2) != null){
+										Event e3 = other1.existsDeletionEventTo(other2);
+										if(e3 != null){
 											//System.out.println("Translocation between "+e1+ " and "+ e2);
-											newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_TRANSLOCATION, (new Event[] {e1, e2, other1.existsDeletionEventTo(other2)}), currentNode);
+											//intrachromosomal translocations are actually ambiguous as to where they come from and got to
+											//as a convention, we call the smaller bit the translocated one inserted into the larger bit.
+											if(e1.size() < e3.size()) {
+												//area under e1 is translocated
+												GenomicCoordinate transtart, tranend;
+												if(e1.getC1().compareTo(e1.getC2()) < 0) { // don't assume ordered coordinates
+													transtart = e1.getC1();
+													tranend   = e1.getC2();
+												} else {
+													transtart = e1.getC2();
+													tranend   = e1.getC1();
+												}
+												GenomicCoordinate traninsert = (e2.getNode(true) == currentNode? e2.getC2() : e2.getC1());
+												GenomicNode hostingNode = (e2.getNode(true) == currentNode? e2.getNode(false) : e2.getNode(true));
+												newComplexEvent = new ComplexEvent(transtart, tranend, EVENT_TYPE.COMPLEX_TRANSLOCATION, (new Event[] {e1, e2, e3}), hostingNode, traninsert);
+											} else {
+												//area under e3 is translocated
+												GenomicCoordinate transtart, tranend;
+												if(e3.getC1().compareTo(e3.getC2()) < 0) {
+													transtart = e3.getC1();
+													tranend   = e3.getC2();
+												} else {
+													transtart = e3.getC2();
+													tranend   = e3.getC1();
+												}
+												GenomicCoordinate traninsert = (e2.getNode(true) == currentNode? e2.getC1() : e2.getC2());
+												newComplexEvent = new ComplexEvent(transtart, tranend, EVENT_TYPE.COMPLEX_TRANSLOCATION, (new Event[] {e1, e2, e3}), currentNode, traninsert);
+											}
 										}
 										else {
 											//System.out.println("Duplication between "+e1+ " and "+ e2);
-											newComplexEvent = new ComplexEvent(null, null, EVENT_TYPE.COMPLEX_DUPLICATION, (new Event[] {e1, e2}), currentNode);
+											GenomicCoordinate dupstart, dupend, insert;
+											if(other1.compareTo(other2) < 0){
+												//duplicated bit is downstream of currentNode
+												dupstart = (e1.getNode(true) == currentNode? e1.getC2() : e1.getC1());
+												dupend   = (e2.getNode(true) == currentNode? e2.getC2() : e2.getC1());
+												insert   = (e1.getNode(true) == currentNode? e1.getC1() : e1.getC2());
+												newComplexEvent = new ComplexEvent(dupstart, dupend, EVENT_TYPE.COMPLEX_DUPLICATION, (new Event[] {e1, e2}), currentNode, insert);
+											} else {
+												//duplication upstream of currentNode
+												dupstart = (e2.getNode(true) == currentNode? e2.getC2() : e2.getC1());
+												dupend   = (e1.getNode(true) == currentNode? e1.getC2() : e1.getC1());
+												insert   = (e2.getNode(true) == currentNode? e2.getC1() : e2.getC2());
+												newComplexEvent = new ComplexEvent(dupstart, dupend, EVENT_TYPE.COMPLEX_DUPLICATION, (new Event[] {e1, e2}), currentNode, insert);
+											}
+											
 										}
 									}
 								}
@@ -192,7 +234,9 @@ public class Genotyper {
 					e.getNode(true).getEvents().remove(e);
 					e.getNode(false).getEvents().remove(e);
 				}
-				currentNode.getEvents().addAll(newComplexEvents);
+				for(Event e: newComplexEvents){
+					e.getNode(true).getEvents().add(e);
+				}
 			}
 		}
 		
@@ -207,6 +251,9 @@ public class Genotyper {
 				for(Event e: currentNode.getEvents()){
 					if(skipEvents.contains(e))
 						continue;
+					if(e.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_DUPLICATION){
+						System.out.print("At Coordinate "+((ComplexEvent)e).getInsertionPoint()+" ");
+					}
 					System.out.println(e);
 					if(e.otherNode(currentNode) == currentNode){
 						skipEvents.add(e);

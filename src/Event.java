@@ -148,6 +148,12 @@ public class Event {
 	
 	@Override
 	public String toString() {
+		if(c1.onSameChromosome(c2)){
+			if(c1.compareTo(c2) < 0)
+				return c1.getChr()+":"+c1.getPos()+"-"+c2.getPos()+" "+type;
+			else
+				return c1.getChr()+":"+c2.getPos()+"-"+c1.getPos()+" "+type;
+		}
 		return c1+"<->"+c2+" "+type;
 	}
 	
@@ -160,5 +166,9 @@ public class Event {
 		}
 		System.err.println("otherNode: query node is not assiciated with Event!");
 		return null;
+	}
+	
+	public int size() {
+		return c1.distanceTo(c2);
 	}
 }
