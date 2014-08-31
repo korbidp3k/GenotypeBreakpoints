@@ -251,9 +251,6 @@ public class Genotyper {
 				for(Event e: currentNode.getEvents()){
 					if(skipEvents.contains(e))
 						continue;
-					if(e.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_DUPLICATION){
-						System.out.print("At Coordinate "+((ComplexEvent)e).getInsertionPoint()+" ");
-					}
 					System.out.println(e);
 					if(e.otherNode(currentNode) == currentNode){
 						skipEvents.add(e);

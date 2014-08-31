@@ -23,5 +23,13 @@ public class ComplexEvent extends Event{
 	public GenomicCoordinate getInsertionPoint() {
 		return this.insertionPoint;
 	}
-
+	
+	@Override
+	public String toString(){
+		if(this.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION || this.getType() == EVENT_TYPE.COMPLEX_DUPLICATION){
+			return "At Coordinate "+this.getInsertionPoint()+" "+super.toString();
+		} else {
+			return super.toString();
+		}
+	}
 }

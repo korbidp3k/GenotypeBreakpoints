@@ -8,6 +8,7 @@ public class Event {
 	private GenomicCoordinate c1, c2;
 	private EVENT_TYPE type;
 	private GenomicNode[] myNodes;
+	private String additionalInformation;
 	
 	public Event(GenomicCoordinate c1, GenomicCoordinate c2, EVENT_TYPE type){
 		this.c1 = c1;
@@ -15,24 +16,41 @@ public class Event {
 		this.type = type;
 		myNodes = new GenomicNode[2];
 	}
+	
+	public Event(GenomicCoordinate c1, GenomicCoordinate c2, EVENT_TYPE type, String additionalInformation){
+		this(c1,c2,type);
+		this.additionalInformation = additionalInformation;
+	}
 
 	/*
 	 * Static function to handle the particularities of Socrates output, and convert it into a general
 	 * purpose Event.
 	 */
 	public static Event createNewEventFromSocratesOutput(String output){
-		StringTokenizer t = new StringTokenizer(output, "\t:");
-		String chr1 = t.nextToken();
-		int p1 = Integer.parseInt(t.nextToken());
-		String o1 = t.nextToken();
-		t.nextToken();
-		String chr2 = t.nextToken();
-		int p2 = Integer.parseInt(t.nextToken());
-		String o2 = t.nextToken();
+		String line = output.replace("\t\t", "\tX\t");
+		StringTokenizer t = new StringTokenizer(line);
+		String chr1 = t.nextToken(":");
+		int p1 = Integer.parseInt(t.nextToken(":\t"));
+		String o1 = t.nextToken("\t");
+		t.nextToken("\t");
+		String chr2 = t.nextToken("\t:");
+		int p2 = Integer.parseInt(t.nextToken("\t:"));
+		String o2 = t.nextToken("\t");
 		
 		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
 		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
 		EVENT_TYPE type = classifySocratesBreakpoint(c1, o1, c2, o2);
+		
+		//look for additional information at the end of the call
+		int c = t.countTokens();
+		for(int i=0; i<19; i++){
+			t.nextToken();
+		}
+		String additionalComments = t.nextToken();
+		if(additionalComments.startsWith("Inserted sequence")){
+			String insert = additionalComments.substring("Inserted sequence: ".length());
+			return new Event(c1, c2, type, insert);
+		}
 		
 		return new Event(c1, c2, type);
 	}
@@ -149,8 +167,12 @@ public class Event {
 	@Override
 	public String toString() {
 		if(c1.onSameChromosome(c2)){
-			if(c1.compareTo(c2) < 0)
+			if(c1.compareTo(c2) < 0) {
+				if(this.additionalInformation!= null && this.additionalInformation.matches("[ACGT]+") && myNodes[0] == myNodes[1]){
+					return c1.getChr()+":"+c1.getPos()+"-"+c2.getPos()+" "+this.additionalInformation+" "+EVENT_TYPE.INS;
+				}
 				return c1.getChr()+":"+c1.getPos()+"-"+c2.getPos()+" "+type;
+			}
 			else
 				return c1.getChr()+":"+c2.getPos()+"-"+c1.getPos()+" "+type;
 		}
