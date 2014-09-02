@@ -173,6 +173,9 @@ public class Event {
 				}
 				return c1.getChr()+":"+c1.getPos()+"-"+c2.getPos()+" "+type;
 			}
+			else if(this.additionalInformation!= null && this.additionalInformation.matches("[ACGT]+") && myNodes[0] == myNodes[1]){
+				return c2.getChr()+":"+c2.getPos()+"-"+c1.getPos()+" "+this.additionalInformation+" "+EVENT_TYPE.INS;
+			} 
 			else
 				return c1.getChr()+":"+c2.getPos()+"-"+c1.getPos()+" "+type;
 		}
