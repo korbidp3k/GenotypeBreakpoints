@@ -42,7 +42,7 @@ public class Genotyper {
 		FileWriter output = new FileWriter(outputFilename);
 		output.write("digraph g {\n");
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
-			if(!tableEntry.getKey().equals("chr11"))
+			if(!tableEntry.getKey().equals("chr12"))
 				continue;
 			output.write("{rank=same; ");
 			for(GenomicNode n : tableEntry.getValue()){
@@ -63,7 +63,13 @@ public class Genotyper {
 						Event ee = ((ComplexEvent)e).getEventsInvolvedInComplexEvent()[0];
 						l1 = generateNodeLabel(ee.getNode(true));
 						l2 = generateNodeLabel(ee.getNode(false));
-						output.write(l1+"->"+l2+"[label=\"INV\"  dir=both];\n"); break;
+						//if (l1.equals("chr12_28204143_28204160")){
+						//if (l1.equals("chr12_24118329_24118583")){
+							System.out.println("COMPLEX_INV:");
+							System.out.println("l1:\t"+generateNodeLabel(ee.getNode(true))+"\t");
+							System.out.println("l2:\t"+generateNodeLabel(ee.getNode(false))+"\t");
+						//}
+						output.write(l1+"->"+l2+"[label=\"COMPLEX_INV\"  dir=both];\n"); break;//should we differentiate COMPLEX_INV and INV?
 					case COMPLEX_TRANSLOCATION: 
 					case COMPLEX_DUPLICATION:
 						GenomicNode insNode = e.getNode(true);
@@ -104,7 +110,7 @@ public class Genotyper {
 			String type = st.nextToken();
 			String chr = st.nextToken();
 			int start = Integer.parseInt(st.nextToken());
-			int end = Integer.parseInt(st.nextToken());
+			//int end = Integer.parseInt(st.nextToken());
 			if(type.equals("SNP") || type.equals("JOIN")){
 				goldLine = gold.readLine();
 				continue;
@@ -253,7 +259,7 @@ public class Genotyper {
 			System.out.println("Nodes Merged: "+nodesMerged);
 		}
 		
-		compareToGoldStandard("data/simulated_chr12_1.fa", genomicNodes, 150);
+		//compareToGoldStandard("data/simulated_chr12_1.fa", genomicNodes, 150);
 		
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
@@ -273,10 +279,14 @@ public class Genotyper {
 							//inversions
 							case INV1: {
 								if(e2.getType() == EVENT_TYPE.INV2 && Event.sameNodeSets(e1, e2)){
-									//System.out.println("Complex inversion between "+e1+" and "+e2);
+									System.out.println("Complex inversion between "+e1+" and "+e2);
 									GenomicCoordinate invstart = (e1.getC1().compareTo(e1.getC2()) < 0? e1.getC1() : e1.getC2());
 									GenomicCoordinate invend   = (e2.getC2().compareTo(e2.getC1()) < 0? e2.getC1() : e2.getC2());
+									System.out.println(e1.getC1()+"\t"+e1.getC2()+"\t"+e2.getC1()+"\t"+e2.getC2()+"\t"+invstart+"\t"+invend);
 									newComplexEvent = new ComplexEvent(invstart, invend, EVENT_TYPE.COMPLEX_INVERSION, (new Event[] {e1, e2}), currentNode);
+									//currentNode?
+									System.out.println(currentNode.getStart().toString());
+									System.out.println(currentNode.getEnd().toString());
 								}
 								else {
 									//unknown pairing
@@ -412,10 +422,14 @@ public class Genotyper {
 				}
 			}
 		}
-		System.out.println("Total events: "+totalEvents);
+		//System.out.println("Total events: "+totalEvents);
 		
-		compareToGoldStandard("data/simulated_chr12_1.fa", genomicNodes, 150);
+		//compareToGoldStandard("data/simulated_chr12_1.fa", genomicNodes, 150);
+	
+		graphVisualisation("data/simul_chr12_graph.gv", genomicNodes);
 		
 	}
+
+	
 
 }
