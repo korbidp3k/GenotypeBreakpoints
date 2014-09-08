@@ -1,7 +1,7 @@
 import java.util.StringTokenizer;
 
 
-enum EVENT_TYPE {INS, INV1, INV2, DEL, TAN, INVTX1, INVTX2, ITX1, ITX2, XXX, COMPLEX_INVERSION, COMPLEX_DUPLICATION, COMPLEX_TRANSLOCATION};
+enum EVENT_TYPE {INS, INV1, INV2, DEL, TAN, INVTX1, INVTX2, ITX1, ITX2, XXX, COMPLEX_INVERSION, COMPLEX_DUPLICATION, COMPLEX_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_DUPLICATION};
 
 public class Event {
 
@@ -11,8 +11,13 @@ public class Event {
 	private String additionalInformation;
 	
 	public Event(GenomicCoordinate c1, GenomicCoordinate c2, EVENT_TYPE type){
-		this.c1 = c1;
-		this.c2 = c2;
+		if(c1.compareTo(c2) < 0){
+			this.c1 = c1;
+			this.c2 = c2;
+		} else {
+			this.c1 = c2;
+			this.c2 = c1;
+		}
 		this.type = type;
 		myNodes = new GenomicNode[2];
 	}

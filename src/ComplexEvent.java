@@ -27,7 +27,7 @@ public class ComplexEvent extends Event{
 	@Override
 	public String toString(){
 		if(this.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION || this.getType() == EVENT_TYPE.COMPLEX_DUPLICATION){
-			return "At Coordinate "+this.getInsertionPoint()+" "+super.toString();
+			return this.getInsertionPoint()+" "+super.toString();
 		} else {
 			return super.toString();
 		}

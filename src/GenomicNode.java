@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 public class GenomicNode implements Comparable<GenomicNode>{
@@ -67,15 +68,18 @@ public class GenomicNode implements Comparable<GenomicNode>{
 
 	public void checkForRedundantEvents(){
 		Event e1, e2;
+		HashSet<Event> redundantEvents = new HashSet<Event>();
 		for(int i=0; i<events.size(); i++){
 			e1 = events.get(i);
 			for(int j=i+1; j< events.size(); j++){
 				e2=events.get(j);
 				if(Event.sameNodeSets(e1,e2) && e1.getType() == e2.getType()){
-					System.out.println("Redundant events identified");
+					//System.out.println("Redundant events identified: "+e1+" "+e2);
+					redundantEvents.add(e2);
 				}
 			}
 		}
+		this.events.removeAll(redundantEvents);
 	}
 	
 	public Event existsDeletionEventTo(GenomicNode other){
