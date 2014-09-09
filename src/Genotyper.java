@@ -104,6 +104,7 @@ public class Genotyper {
 		GenomicNode n = iter.next();
 		Event e = n.getEvents().get(0);
 		int fps = 0, fns = 0, tps = 0;
+		HashSet<Event> skip = new HashSet<Event>();
 		
 		while(goldLine != null && e != null){
 			StringTokenizer st = new StringTokenizer(goldLine, ":-\t");
@@ -129,7 +130,7 @@ public class Genotyper {
 			} else {
 				if(type.equals("INVERSION") && e.getType()==EVENT_TYPE.COMPLEX_INVERSION || type.equals("DELETION") && e.getType()==EVENT_TYPE.DEL
 						|| type.equals("TANDEM") && e.getType()==EVENT_TYPE.TAN || type.equals("INSERTION") && e.getType()==EVENT_TYPE.COMPLEX_DUPLICATION
-						|| type.equals("TRANSLOCATION") && e.getType()==EVENT_TYPE.COMPLEX_TRANSLOCATION) {
+						|| type.equals("TRANSLOCATION") && e.getType()==EVENT_TYPE.COMPLEX_TRANSLOCATION || type.equals("INSERTION") && e.getType()==EVENT_TYPE.INS) {
 					System.out.println("TP: "+e+" "+goldLine);
 					tps++;
 					goldLine = gold.readLine();
@@ -138,9 +139,13 @@ public class Genotyper {
 					fps++;
 				}
 			}
+			skip.add(e);
 			n = iter.next();
-			while(n!=null && n.getEvents().size()==0){
-				n = iter.next();
+			while(n!=null && ( n.getEvents().size()==0 || skip.contains(n.getEvents().get(0)))){
+				if (iter.hasNext())
+					n = iter.next();
+				else
+					n = null;
 			}
 			if(n!=null)
 				e = n.getEvents().get(0);
@@ -148,8 +153,10 @@ public class Genotyper {
 				e = null;
 		}
 		while(goldLine!=null){
-			System.out.println("FN: "+goldLine);
-			fns++;
+			if(! goldLine.contains("SNP")){
+				System.out.println("FN: "+goldLine);
+				fns++;
+			}
 			goldLine = gold.readLine();
 		}
 		while(n!=null){
@@ -163,6 +170,7 @@ public class Genotyper {
 				n = null;
 		}
 		System.out.println("FP:"+fps+"\tFN:"+fns+"\tTP:"+tps);
+		gold.close();
 	}
 	
 	
@@ -412,6 +420,7 @@ public class Genotyper {
 					if(skipEvents.contains(e))
 						continue;
 					//if(currentNode.getEvents().size() < 3 && (e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION || e.getType()==EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION))
+					e.processAdditionalInformation(); //TODO: this is a bit of a sly hack to classify insertions in Socrates... not sure how to do it more transparently. 
 					System.out.println(e);
 					if(e.otherNode(currentNode) == currentNode){
 						skipEvents.add(e);
@@ -424,7 +433,7 @@ public class Genotyper {
 		}
 		//System.out.println("Total events: "+totalEvents);
 		
-		//compareToGoldStandard("data/simulated_chr12_1.fa", genomicNodes, 150);
+		compareToGoldStandard("data/simulated_chr12_1.fa", genomicNodes, 150);
 	
 		graphVisualisation("data/simul_chr12_graph.gv", genomicNodes);
 		

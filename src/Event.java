@@ -172,19 +172,10 @@ public class Event {
 	@Override
 	public String toString() {
 		if(c1.onSameChromosome(c2)){
-			if(c1.compareTo(c2) < 0) {
-				if(this.additionalInformation!= null && this.additionalInformation.matches("[ACGT]+") && myNodes[0] == myNodes[1]){
-					return c1.getChr()+":"+c1.getPos()+"-"+c2.getPos()+" "+this.additionalInformation+" "+EVENT_TYPE.INS;
-				}
-				return c1.getChr()+":"+c1.getPos()+"-"+c2.getPos()+" "+type;
-			}
-			else if(this.additionalInformation!= null && this.additionalInformation.matches("[ACGT]+") && myNodes[0] == myNodes[1]){
-				return c2.getChr()+":"+c2.getPos()+"-"+c1.getPos()+" "+this.additionalInformation+" "+EVENT_TYPE.INS;
-			} 
-			else
-				return c1.getChr()+":"+c2.getPos()+"-"+c1.getPos()+" "+type;
+			return c1.getChr()+":"+c2.getPos()+"-"+c1.getPos()+" "+type;
+		} else {
+			return c1+"<->"+c2+" "+type;
 		}
-		return c1+"<->"+c2+" "+type;
 	}
 	
 	public GenomicNode otherNode(GenomicNode node){
@@ -200,5 +191,11 @@ public class Event {
 	
 	public int size() {
 		return c1.distanceTo(c2);
+	}
+	
+	public void processAdditionalInformation(){
+		if(this.additionalInformation!= null && this.additionalInformation.matches("[ACGT]+") && myNodes[0] == myNodes[1]){
+			this.type = EVENT_TYPE.INS;
+		}
 	}
 }
