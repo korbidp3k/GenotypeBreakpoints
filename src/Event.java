@@ -47,7 +47,6 @@ public class Event {
 		EVENT_TYPE type = classifySocratesBreakpoint(c1, o1, c2, o2);
 		
 		//look for additional information at the end of the call
-		int c = t.countTokens();
 		for(int i=0; i<19; i++){
 			t.nextToken();
 		}
@@ -82,7 +81,7 @@ public class Event {
 				return EVENT_TYPE.INVTX1;
 			else
 				return EVENT_TYPE.INVTX2;
-		} else if(o1.equals("+")){
+		} else if(o1.equals("+") && c1.compareTo(c2) < 0 || o1.equals("-") && c1.compareTo(c2) >= 0){
 			return EVENT_TYPE.ITX1;
 		} else {
 			return EVENT_TYPE.ITX2;
@@ -162,6 +161,7 @@ public class Event {
 			return myNodes[1];
 	}
 	
+	
 	public static boolean sameNodeSets(Event e1, Event e2){
 		if(e1.myNodes[0] == e2.myNodes[0] && e1.myNodes[1] == e2.myNodes[1] 
 				|| e1.myNodes[0] == e2.myNodes[1] && e1.myNodes[1] == e2.myNodes[0])
@@ -172,7 +172,7 @@ public class Event {
 	@Override
 	public String toString() {
 		if(c1.onSameChromosome(c2)){
-			return c1.getChr()+":"+c2.getPos()+"-"+c1.getPos()+" "+type;
+			return c1.getChr()+":"+c1.getPos()+"-"+c2.getPos()+" "+type;
 		} else {
 			return c1+"<->"+c2+" "+type;
 		}

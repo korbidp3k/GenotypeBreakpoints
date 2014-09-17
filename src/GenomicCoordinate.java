@@ -8,14 +8,14 @@ class GenomicCoordinate implements Comparable<GenomicCoordinate>{
 	}
 	@Override
 	public int compareTo(GenomicCoordinate other) {
-		if(other.chr.equals(this.chr)){
+		if(this.onSameChromosome(other)){
 			if(this.pos < other.pos)
 				return -1;
 			if(this.pos > other.pos)
 				return 1;
 			return 0;
 		}
-		return 0;
+		return compareChromosomes(other);
 	}
 	public String getChr() {
 		return chr;
@@ -36,5 +36,9 @@ class GenomicCoordinate implements Comparable<GenomicCoordinate>{
 	@Override
 	public String toString() {
 		return chr+":"+pos;
+	}
+	
+	private int compareChromosomes(GenomicCoordinate other){
+		return this.chr.compareTo(other.chr); 
 	}
 }
