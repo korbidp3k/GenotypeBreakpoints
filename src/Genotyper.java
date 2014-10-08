@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -13,6 +14,8 @@ import java.util.TreeSet;
 
 import com.sun.awt.AWTUtilities.Translucency;
 import com.sun.media.jai.opimage.MeanRIF;
+
+import net.sf.samtools.*;
 
 
 
@@ -290,6 +293,32 @@ public class Genotyper {
 		return (double)sum / count;
 	}
 	
+	private static int queryBAMFile(String filename, int start, int end) throws IOException{
+		
+		boolean hasBI=false;
+		int count = 0;
+		
+		File file = new File(filename);
+		SAMFileReader sfr=new SAMFileReader(file);
+
+		if (hasBI=sfr.hasIndex()){
+			AbstractBAMFileIndex index = (AbstractBAMFileIndex) sfr.getIndex();
+			int nRefs=index.getNumberOfReferences();
+			//System.out.println("nRefs: "+nRefs);
+			for (int i=0; i<nRefs; i++){
+				BAMIndexMetaData meta = index.getMetaData(i);
+				count += meta.getAlignedRecordCount();
+				//System.out.println(index.getMetaData(i).getAlignedRecordCount());
+				//System.out.println("count="+count);
+			}
+		}
+		else{
+			count = -1;
+		}
+		
+		sfr.close();
+		return count;
+	}
 	
 	enum SV_ALGORITHM {SOCRATES, DELLY};
 	
@@ -298,11 +327,17 @@ public class Genotyper {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		if(args.length < 3){
-			System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track> <algorithm (Socrates/Delly)>");
+		if(args.length < 4){
+			System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
 			System.exit(0);
 		}
 		
+		/*
+		 * Testing read depth query- Remove later
+		 */
+		int readDepth = 0;
+		readDepth = queryBAMFile(args[2], 0, 100);
+		System.out.println("BAM Read Depth:" + readDepth);
 		
 		/*
 		 * parse the algorithm parameter from command line
@@ -310,7 +345,7 @@ public class Genotyper {
 		SV_ALGORITHM algorithm = SV_ALGORITHM.SOCRATES;
 		
 		try{
-			algorithm = SV_ALGORITHM.valueOf(args[2].toUpperCase());
+			algorithm = SV_ALGORITHM.valueOf(args[3].toUpperCase());
 			System.out.println("Interpreting input as "+algorithm+" breakpoints");
 		} catch (IllegalArgumentException e){
 			System.out.println("Unknown SV algorithm identifier.");
@@ -322,7 +357,7 @@ public class Genotyper {
 		 * Needed only after event genotyping
 		 */
 
-		TabixReader reader = new TabixReader(args[1]); //reads mpileup track for copy number analysis
+		//TABIX TabixReader reader = new TabixReader(args[1]); //reads mpileup track for copy number analysis
 		/*
 		 * parse the entire input file and collect all events in list
 		 */
@@ -391,7 +426,8 @@ public class Genotyper {
 			System.out.println("Nodes Merged: "+nodesMerged);
 		}
 		
-		String goldStandard = args[1].substring(0, 22)+"_2.fa";
+		//TABIX String goldStandard = args[1].substring(0, 22)+"_2.fa";
+		String goldStandard = args[1].substring(0, 20)+"_2.fa";
 		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
 		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 		
@@ -561,7 +597,7 @@ public class Genotyper {
 							}
 							else 
 								continue;
-						} else if(e.getType() == EVENT_TYPE.DEL){
+						} /*TABIX else if(e.getType() == EVENT_TYPE.DEL){
 							//check for deletion
 							double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
 							if(readDepth > mean-interval){
@@ -576,7 +612,7 @@ public class Genotyper {
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
 								deleteEvents.add(e);
 							}
-						}
+						}TABIX */
 						
 						System.out.println(e);
 					//}
