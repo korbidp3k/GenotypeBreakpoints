@@ -15,7 +15,7 @@ import java.util.TreeSet;
 import com.sun.awt.AWTUtilities.Translucency;
 import com.sun.media.jai.opimage.MeanRIF;
 
-import net.sf.samtools.*;
+import htsjdk.samtools.*;
 
 
 
@@ -293,30 +293,38 @@ public class Genotyper {
 		return (double)sum / count;
 	}
 	
-	private static int queryBAMFile(String filename, int start, int end) throws IOException{
+	private static int queryBAMFile(String filename, String chr, int start, int end) throws IOException{
 		
 		boolean hasBI=false;
 		int count = 0;
 		
 		File file = new File(filename);
-		SAMFileReader sfr=new SAMFileReader(file);
+		SamReader reader = SamReaderFactory.makeDefault().open(file); 
+		
+		if (hasBI=reader.hasIndex()){
+			BAMIndex index = reader.indexing().getIndex();
+			index.getMetaData(0).printIndexStats(file);
+			//SAMRecordIterator iterator = reader.queryOverlapping(chr, start, end);
 
-		if (hasBI=sfr.hasIndex()){
-			AbstractBAMFileIndex index = (AbstractBAMFileIndex) sfr.getIndex();
-			int nRefs=index.getNumberOfReferences();
+			
+			//int nRefs=
+			
 			//System.out.println("nRefs: "+nRefs);
-			for (int i=0; i<nRefs; i++){
-				BAMIndexMetaData meta = index.getMetaData(i);
-				count += meta.getAlignedRecordCount();
-				//System.out.println(index.getMetaData(i).getAlignedRecordCount());
-				//System.out.println("count="+count);
-			}
+			//System.out.println("Index: "+index.toString());
+//			for (int i=0; i<nRefs; i++){
+//				BAMIndexMetaData meta = index.getMetaData(i);
+//				count += meta.getAlignedRecordCount();
+//				System.out.println(index.getMetaData(i).getAlignedRecordCount());
+//				System.out.println("count="+count);
+//			}
+			
+			//iterator.close();
 		}
 		else{
 			count = -1;
 		}
 		
-		sfr.close();
+		reader.close();
 		return count;
 	}
 	
@@ -336,7 +344,7 @@ public class Genotyper {
 		 * Testing read depth query- Remove later
 		 */
 		int readDepth = 0;
-		readDepth = queryBAMFile(args[2], 0, 100);
+		readDepth = queryBAMFile(args[2], "chr12", 60005, 60050);
 		System.out.println("BAM Read Depth:" + readDepth);
 		
 		/*
