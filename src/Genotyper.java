@@ -13,7 +13,6 @@ import java.util.Map.Entry;
 import java.util.TreeSet;
 
 import com.sun.awt.AWTUtilities.Translucency;
-import com.sun.media.jai.opimage.MeanRIF;
 
 import htsjdk.samtools.*;
 
@@ -265,7 +264,8 @@ public class Genotyper {
 //		System.out.println("Done");
 //		input.close();
 //		return null;
-		TabixReader reader = new TabixReader("data/simulated_chr12_1_simseq_s.mpileup.gz");
+		//TabixReader reader = new TabixReader("data/simulated_chr12_1_simseq_s.mpileup.gz");
+		TabixReader reader = new TabixReader("../../BAM/simulated_chr12_1_simseq_s.mpileup.tar.gz");
 		TabixReader.Iterator iter = reader.query(0, 60002, 60010);
 		String line;
 		while( (line=iter.next()) != null){
@@ -304,8 +304,15 @@ public class Genotyper {
 		if (hasBI=reader.hasIndex()){
 			BAMIndex index = reader.indexing().getIndex();
 			index.getMetaData(0).printIndexStats(file);
+			
+			//System.out.println(reader.getFileHeader().getTextHeader().toString());
 			//SAMRecordIterator iterator = reader.queryOverlapping(chr, start, end);
-
+			//SAMRecordIterator iterator = reader.queryAlignmentStart(chr, start);
+			System.out.println(index.toString());
+			System.out.println(index.getStartOfLastLinearBin());
+			System.out.println(index.getSpanOverlapping(0, start, end));
+			
+			//System.out.println(reader.indexing().getBrowseableIndex().getBinsOverlapping(0, start, end).toString());
 			
 			//int nRefs=
 			
@@ -343,9 +350,9 @@ public class Genotyper {
 		/*
 		 * Testing read depth query- Remove later
 		 */
-		int readDepth = 0;
-		readDepth = queryBAMFile(args[2], "chr12", 60005, 60050);
-		System.out.println("BAM Read Depth:" + readDepth);
+//		int readDepth = 0;
+//		readDepth = queryBAMFile(args[2], "chr12", 60005, 60050);
+//		System.out.println("BAM Read Depth:" + readDepth);
 		
 		/*
 		 * parse the algorithm parameter from command line
@@ -365,7 +372,7 @@ public class Genotyper {
 		 * Needed only after event genotyping
 		 */
 
-		//TABIX TabixReader reader = new TabixReader(args[1]); //reads mpileup track for copy number analysis
+		TabixReader reader = new TabixReader(args[1]); //reads mpileup track for copy number analysis
 		/*
 		 * parse the entire input file and collect all events in list
 		 */
@@ -434,8 +441,8 @@ public class Genotyper {
 			System.out.println("Nodes Merged: "+nodesMerged);
 		}
 		
-		//TABIX String goldStandard = args[1].substring(0, 22)+"_2.fa";
-		String goldStandard = args[1].substring(0, 20)+"_2.fa";
+		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
+		String goldStandard = args[1].substring(0, 35)+"_2.fa";
 		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
 		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 		
@@ -605,7 +612,7 @@ public class Genotyper {
 							}
 							else 
 								continue;
-						} /*TABIX else if(e.getType() == EVENT_TYPE.DEL){
+						} else if(e.getType() == EVENT_TYPE.DEL){
 							//check for deletion
 							double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
 							if(readDepth > mean-interval){
@@ -620,7 +627,7 @@ public class Genotyper {
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
 								deleteEvents.add(e);
 							}
-						}TABIX */
+						}
 						
 						System.out.println(e);
 					//}
