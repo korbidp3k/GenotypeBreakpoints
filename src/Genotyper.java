@@ -265,7 +265,7 @@ public class Genotyper {
 //		input.close();
 //		return null;
 		//TabixReader reader = new TabixReader("data/simulated_chr12_1_simseq_s.mpileup.gz");
-		TabixReader reader = new TabixReader("../../BAM/simulated_chr12_1_simseq_s.mpileup.tar.gz");
+		TabixReader reader = new TabixReader("../../BAM/simulated_chr12_1_simseq_s.mpileup.gz");
 		TabixReader.Iterator iter = reader.query(0, 60002, 60010);
 		String line;
 		while( (line=iter.next()) != null){
@@ -291,48 +291,6 @@ public class Genotyper {
 			sum += Integer.parseInt(tokens.nextToken());
 		}
 		return (double)sum / count;
-	}
-	
-	private static int queryBAMFile(String filename, String chr, int start, int end) throws IOException{
-		
-		boolean hasBI=false;
-		int count = 0;
-		
-		File file = new File(filename);
-		SamReader reader = SamReaderFactory.makeDefault().open(file); 
-		
-		if (hasBI=reader.hasIndex()){
-			BAMIndex index = reader.indexing().getIndex();
-			index.getMetaData(0).printIndexStats(file);
-			
-			//System.out.println(reader.getFileHeader().getTextHeader().toString());
-			//SAMRecordIterator iterator = reader.queryOverlapping(chr, start, end);
-			//SAMRecordIterator iterator = reader.queryAlignmentStart(chr, start);
-			System.out.println(index.toString());
-			System.out.println(index.getStartOfLastLinearBin());
-			System.out.println(index.getSpanOverlapping(0, start, end));
-			
-			//System.out.println(reader.indexing().getBrowseableIndex().getBinsOverlapping(0, start, end).toString());
-			
-			//int nRefs=
-			
-			//System.out.println("nRefs: "+nRefs);
-			//System.out.println("Index: "+index.toString());
-//			for (int i=0; i<nRefs; i++){
-//				BAMIndexMetaData meta = index.getMetaData(i);
-//				count += meta.getAlignedRecordCount();
-//				System.out.println(index.getMetaData(i).getAlignedRecordCount());
-//				System.out.println("count="+count);
-//			}
-			
-			//iterator.close();
-		}
-		else{
-			count = -1;
-		}
-		
-		reader.close();
-		return count;
 	}
 	
 	enum SV_ALGORITHM {SOCRATES, DELLY};
