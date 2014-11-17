@@ -15,6 +15,9 @@ import java.util.TreeSet;
 import com.sun.awt.AWTUtilities.Translucency;
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.SamLocusIterator;
 
 
 
@@ -293,6 +296,39 @@ public class Genotyper {
 		return (double)sum / count;
 	}
 	
+	private static int getReadDepth(String str, String chr, int start, int end){
+		
+		SAMFileReader  samReader=new  SAMFileReader(new  File(str));
+        String chromId=chr;
+        int chromStart=start;
+        int chromEnd=end;
+        int pos=0;
+        int depth=0;
+        int total=0;
+        Interval  interval=new  Interval(chromId,chromStart,chromEnd);
+        IntervalList  iL=new  IntervalList(samReader.getFileHeader());
+        iL.add(interval);
+
+        SamLocusIterator  sli=new  SamLocusIterator(samReader,iL,true);
+
+
+        for(Iterator<SamLocusIterator.LocusInfo>   iter=sli.iterator();
+                iter.hasNext();
+                )
+            {
+            SamLocusIterator.LocusInfo  locusInfo=iter.next();
+            pos = locusInfo.getPosition();
+            depth = locusInfo.getRecordAndPositions().size();
+            total+=depth;
+            System.out.println("POS="+pos+" depth:"+depth);
+            }
+        sli.close();
+        samReader.close();
+        
+        return total;
+    }
+	
+	
 	enum SV_ALGORITHM {SOCRATES, DELLY};
 	
 	/**
@@ -308,9 +344,10 @@ public class Genotyper {
 		/*
 		 * Testing read depth query- Remove later
 		 */
-//		int readDepth = 0;
-//		readDepth = queryBAMFile(args[2], "chr12", 60005, 60050);
-//		System.out.println("BAM Read Depth:" + readDepth);
+		
+		int newReadDepth = 0;
+		newReadDepth = getReadDepth(args[2], "chr12", 60005, 60050);
+		System.out.println("BAM Read Depth:" + newReadDepth);
 		
 		/*
 		 * parse the algorithm parameter from command line
@@ -611,7 +648,6 @@ public class Genotyper {
 		//graphVisualisation("data/simul_chr12_graph.gv", genomicNodes);
 		
 		//reportEventComposition(genomicNodes);
-		
 		
 	}
 
