@@ -296,36 +296,35 @@ public class Genotyper {
 		return (double)sum / count;
 	}
 	
-	private static int getReadDepth(String str, String chr, int start, int end){
-		
-		SAMFileReader  samReader=new  SAMFileReader(new  File(str));
+	//private static double getReadDepth(String str, String chr, int start, int end){
+	private static double getReadDepth(SAMFileReader samReader, String chr, int start, int end){
+	
+		//SAMFileReader  samReader=new  SAMFileReader(new  File(str));
         String chromId=chr;
         int chromStart=start;
         int chromEnd=end;
         int pos=0;
         int depth=0;
         int total=0;
+        int count=0;
         Interval  interval=new  Interval(chromId,chromStart,chromEnd);
         IntervalList  iL=new  IntervalList(samReader.getFileHeader());
         iL.add(interval);
 
         SamLocusIterator  sli=new  SamLocusIterator(samReader,iL,true);
 
-
-        for(Iterator<SamLocusIterator.LocusInfo>   iter=sli.iterator();
-                iter.hasNext();
-                )
-            {
+        for(Iterator<SamLocusIterator.LocusInfo> iter=sli.iterator(); iter.hasNext();){
             SamLocusIterator.LocusInfo  locusInfo=iter.next();
-            pos = locusInfo.getPosition();
+            //pos = locusInfo.getPosition();
             depth = locusInfo.getRecordAndPositions().size();
             total+=depth;
-            System.out.println("POS="+pos+" depth:"+depth);
+            count++;
+            //System.out.println("POS="+pos+" depth:"+depth);
             }
         sli.close();
-        samReader.close();
+        //samReader.close();
         
-        return total;
+        return (double)total/count;
     }
 	
 	
@@ -336,18 +335,22 @@ public class Genotyper {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
+		//Start Time
+		long startTime = System.nanoTime();
+		
 		if(args.length < 4){
 			System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
 			System.exit(0);
 		}
 		
+		SAMFileReader  samReader=new  SAMFileReader(new  File(args[2]));
 		/*
 		 * Testing read depth query- Remove later
 		 */
 		
-		int newReadDepth = 0;
+		/*int newReadDepth = 0;
 		newReadDepth = getReadDepth(args[2], "chr12", 60005, 60050);
-		System.out.println("BAM Read Depth:" + newReadDepth);
+		System.out.println("BAM Read Depth:" + newReadDepth);*/
 		
 		/*
 		 * parse the algorithm parameter from command line
@@ -609,14 +612,16 @@ public class Genotyper {
 								continue;
 						} else if(e.getType() == EVENT_TYPE.DEL){
 							//check for deletion
-							double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
+							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
+							double readDepth = getReadDepth(samReader, "chr12", e.getC1().getPos()+1, e.getC2().getPos()-1);
 							if(readDepth > mean-interval){
 								deleteEvents.add(e);
 								skipEvents.add(e);
 								continue;
 							}
 						} else if(e.getType() == EVENT_TYPE.TAN){
-							double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
+							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
+							double readDepth = getReadDepth(samReader, "chr12", e.getC1().getPos()+1, e.getC2().getPos()-1);
 //							//double flank = (meanReadDepth(reader, e.getC1().getPos()-200, e.getC1().getPos()) + meanReadDepth(reader, e.getC2().getPos(), e.getC2().getPos()+200))/2;
 							if(readDepth < mean+interval){
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
@@ -649,6 +654,10 @@ public class Genotyper {
 		
 		//reportEventComposition(genomicNodes);
 		
+		samReader.close();	
+		//End Time
+		long endTime = System.nanoTime();
+		System.out.println("Took "+(endTime - startTime) + " ns"); 
 	}
 
 	
