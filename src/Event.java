@@ -1,7 +1,7 @@
 import java.util.StringTokenizer;
 
 
-enum EVENT_TYPE {INS, INV1, INV2, DEL, TAN, INVTX1, INVTX2, ITX1, ITX2, XXX, COMPLEX_INVERSION, COMPLEX_DUPLICATION, COMPLEX_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_DUPLICATION};
+enum EVENT_TYPE {INS, INV1, INV2, DEL, TAN, INVTX1, INVTX2, ITX1, ITX2, XXX, COMPLEX_INVERSION, COMPLEX_INVERTED_DUPLICATION, COMPLEX_DUPLICATION, COMPLEX_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_DUPLICATION};
 
 public class Event {
 
@@ -130,6 +130,43 @@ public class Event {
 			return EVENT_TYPE.DEL;
 		} else if (t.equals("Duplication")){
 			return EVENT_TYPE.TAN;
+		} else {
+			return EVENT_TYPE.XXX;
+		}
+	}
+	
+	
+	public static Event createNewEventFromCrestOutput(String output) {
+		StringTokenizer t = new StringTokenizer(output, "\t");
+		
+		String chr1 = t.nextToken();
+		int p1 = Integer.parseInt(t.nextToken());
+		String o1 = t.nextToken();
+		t.nextToken();
+		String chr2 = t.nextToken();
+		int p2 = Integer.parseInt(t.nextToken());
+		String o2 = t.nextToken();
+		
+		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
+		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
+		
+		t.nextToken();
+		EVENT_TYPE type = classifyCrestBreakpoint(t.nextToken());
+		
+		if(type == EVENT_TYPE.COMPLEX_INVERSION){
+			return new ComplexEvent(c1, c2, type, null, null);
+		}
+		return new Event(c1, c2, type);
+	}
+	private static EVENT_TYPE classifyCrestBreakpoint(String t){
+		if(t.equals("DEL")){
+			return EVENT_TYPE.DEL;
+		} else if (t.equals("INS")){
+			return EVENT_TYPE.TAN;
+		} else if (t.equals("INV")){
+			return EVENT_TYPE.COMPLEX_INVERSION;
+		} else if(t.equals("ITX")){
+			return EVENT_TYPE.INV1;
 		} else {
 			return EVENT_TYPE.XXX;
 		}

@@ -48,7 +48,7 @@ public class Genotyper {
 		FileWriter output = new FileWriter(outputFilename);
 		output.write("digraph g {\n");
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
-			if(!tableEntry.getKey().equals("chr12"))
+			if(!tableEntry.getKey().equals("ecoli"))
 				continue;
 			output.write("{rank=same; ");
 			for(GenomicNode n : tableEntry.getValue()){
@@ -69,8 +69,8 @@ public class Genotyper {
 						Event ee = ((ComplexEvent)e).getEventsInvolvedInComplexEvent()[0];
 						l1 = generateNodeLabel(ee.getNode(true));
 						l2 = generateNodeLabel(ee.getNode(false));
-						//if (l1.equals("chr12_28204143_28204160")){
-						//if (l1.equals("chr12_24118329_24118583")){
+						//if (l1.equals("ecoli_28204143_28204160")){
+						//if (l1.equals("ecoli_24118329_24118583")){
 							System.out.println("COMPLEX_INV:");
 							System.out.println("l1:\t"+generateNodeLabel(ee.getNode(true))+"\t");
 							System.out.println("l2:\t"+generateNodeLabel(ee.getNode(false))+"\t");
@@ -107,7 +107,7 @@ public class Genotyper {
 	public static void compareToGoldStandard(String goldFileName, Hashtable<String, TreeSet<GenomicNode>> genomicNodes, int margin, boolean compareStrictly) throws IOException {
 		BufferedReader gold = new BufferedReader(new FileReader(goldFileName));
 		String goldLine = gold.readLine();
-		Iterator<GenomicNode> iter = genomicNodes.get("chr12").iterator();
+		Iterator<GenomicNode> iter = genomicNodes.get("ecoli").iterator();
 		GenomicNode n = iter.next();
 		while( n.getEvents().size()==0 ){
 			n = iter.next();
@@ -267,8 +267,13 @@ public class Genotyper {
 //		System.out.println("Done");
 //		input.close();
 //		return null;
+<<<<<<< HEAD
+		//TabixReader reader = new TabixReader("data/simulated_ecoli_1_simseq_s.mpileup.gz");
+		TabixReader reader = new TabixReader("../../BAM/simulated_ecoli_1_simseq_s.mpileup.gz");
+=======
 		//TabixReader reader = new TabixReader("data/simulated_chr12_1_simseq_s.mpileup.gz");
 		TabixReader reader = new TabixReader("../../BAM/simulated_chr12_1_simseq_s.mpileup.gz");
+>>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 		TabixReader.Iterator iter = reader.query(0, 60002, 60010);
 		String line;
 		while( (line=iter.next()) != null){
@@ -328,7 +333,7 @@ public class Genotyper {
     }
 	
 	
-	enum SV_ALGORITHM {SOCRATES, DELLY};
+	enum SV_ALGORITHM {SOCRATES, DELLY, CREST};
 	
 	/**
 	 * @param args
@@ -338,18 +343,32 @@ public class Genotyper {
 		//Start Time
 		long startTime = System.nanoTime();
 		
+<<<<<<< HEAD
+		if(args.length < 5){
+			//System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
+			System.err.println("Usage: <list of breakpoints> <BAM file> <algorithm (Socrates/Delly)> <mean coverage> <coverage std>");
+			System.exit(0);
+		}
+		
+		SAMFileReader  samReader=new  SAMFileReader(new  File(args[1]));
+=======
 		if(args.length < 4){
 			System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
 			System.exit(0);
 		}
 		
 		SAMFileReader  samReader=new  SAMFileReader(new  File(args[2]));
+>>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 		/*
 		 * Testing read depth query- Remove later
 		 */
 		
 		/*int newReadDepth = 0;
+<<<<<<< HEAD
+		newReadDepth = getReadDepth(args[2], "ecoli", 60005, 60050);
+=======
 		newReadDepth = getReadDepth(args[2], "chr12", 60005, 60050);
+>>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 		System.out.println("BAM Read Depth:" + newReadDepth);*/
 		
 		/*
@@ -370,7 +389,7 @@ public class Genotyper {
 		 * Needed only after event genotyping
 		 */
 
-		TabixReader reader = new TabixReader(args[1]); //reads mpileup track for copy number analysis
+		//TabixReader reader = new TabixReader(args[1]); //reads mpileup track for copy number analysis
 		/*
 		 * parse the entire input file and collect all events in list
 		 */
@@ -386,6 +405,7 @@ public class Genotyper {
 			switch(algorithm){
 			case SOCRATES: 	e = Event.createNewEventFromSocratesOutput(line); 	break;
 			case DELLY: 	e = Event.createNewEventFromDellyOutput(line); 		break;
+			case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
 			default:		e = null;
 			}
 			allEvents.add(e);
@@ -411,9 +431,11 @@ public class Genotyper {
 		switch(algorithm){
 		case SOCRATES: 	maxDistanceForNodeMerge = 15; break;
 		case DELLY:		maxDistanceForNodeMerge = 250; break;
+		case CREST:		maxDistanceForNodeMerge = 15; break;
+		default:		System.err.println("Node merge distance set to 0!");
 		}
 		//static parameter to classify single inversions as FP or TP
-		final boolean classifySimpleInversion = true;
+		final boolean classifySimpleInversion = false;
 		
 		//iterate through node sets and merge nodes where necessary
 		//also checks each node for redundant members
@@ -441,8 +463,13 @@ public class Genotyper {
 		
 		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
 		String goldStandard = args[1].substring(0, 35)+"_2.fa";
+<<<<<<< HEAD
+		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
+		//compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+=======
 		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
 		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+>>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 		
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
@@ -470,6 +497,21 @@ public class Genotyper {
 									//currentNode?
 									//System.out.println(currentNode.getStart().toString());
 									//	System.out.println(currentNode.getEnd().toString());
+								}
+								else if(e2.getType() == EVENT_TYPE.INV2 ){
+									GenomicNode other1 = e1.otherNode(currentNode), other2 = e2.otherNode(currentNode);
+									if(other1.compareTo(other2) > 0){
+										Event e3 = other1.existsDeletionEventTo(other2);
+										if(e3 != null){
+											System.out.println("TRANSLO!");
+										} else {
+											System.out.println("INVDUP!"+e1+e2);
+											GenomicCoordinate invstart = (e2.getNode(true) == currentNode ? e2.getC2() : e2.getC1() ),
+															  invend   = (e1.getNode(true) == currentNode ? e1.getC2() : e1.getC1() ),
+															  insert   = (e1.getNode(true) == currentNode ? e1.getC1() : e1.getC2() );
+											newComplexEvent = new ComplexEvent(invstart, invend, EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION, (new Event[] {e1, e2}), currentNode, insert);
+										}
+									}
 								}
 								else {
 									//unknown pairing
@@ -586,12 +628,13 @@ public class Genotyper {
 		//while we're at it: let's run through the nodes again!
 		//this time for output
 		int totalEvents = 0;
-		final double mean = 26.1311;
-		final double interval = 8.0;
+		final double mean = Double.parseDouble(args[3]);
+		final double interval = 2*Double.parseDouble(args[4]);
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
 			for(GenomicNode currentNode: tableEntry.getValue()){
 				if(currentNode.getEvents().size() > 1){
 					System.out.println("Node might be shifty: "+currentNode.getEvents().size()+" members!");
+					System.out.println(currentNode.getEvents().get(0)+"  "+currentNode.getEvents().get(1));
 				}
 				totalEvents += currentNode.getEvents().size();
 				HashSet<Event> skipEvents = new HashSet<Event>(), deleteEvents = new HashSet<Event>(), newEvents = new HashSet<Event>();
@@ -613,7 +656,11 @@ public class Genotyper {
 						} else if(e.getType() == EVENT_TYPE.DEL){
 							//check for deletion
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
+<<<<<<< HEAD
+							double readDepth = getReadDepth(samReader, "ecoli", e.getC1().getPos()+1, e.getC2().getPos()-1);
+=======
 							double readDepth = getReadDepth(samReader, "chr12", e.getC1().getPos()+1, e.getC2().getPos()-1);
+>>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 							if(readDepth > mean-interval){
 								deleteEvents.add(e);
 								skipEvents.add(e);
@@ -621,7 +668,11 @@ public class Genotyper {
 							}
 						} else if(e.getType() == EVENT_TYPE.TAN){
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
+<<<<<<< HEAD
+							double readDepth = getReadDepth(samReader, "ecoli", e.getC1().getPos()+1, e.getC2().getPos()-1);
+=======
 							double readDepth = getReadDepth(samReader, "chr12", e.getC1().getPos()+1, e.getC2().getPos()-1);
+>>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 //							//double flank = (meanReadDepth(reader, e.getC1().getPos()-200, e.getC1().getPos()) + meanReadDepth(reader, e.getC2().getPos(), e.getC2().getPos()+200))/2;
 							if(readDepth < mean+interval){
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
@@ -647,10 +698,10 @@ public class Genotyper {
 		}
 		//System.out.println("Total events: "+totalEvents);
 		
-		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
-		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
+		//compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 	
-		//graphVisualisation("data/simul_chr12_graph.gv", genomicNodes);
+		//graphVisualisation("data/simul_ecoli_graph.gv", genomicNodes);
 		
 		//reportEventComposition(genomicNodes);
 		
