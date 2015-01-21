@@ -12,14 +12,10 @@ import java.util.StringTokenizer;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SamLocusIterator;
-
-
-
 
 
 public class Genotyper {
@@ -321,6 +317,7 @@ public class Genotyper {
             count++;
             //System.out.println("POS="+pos+" depth:"+depth);
             }
+        System.out.println("total: "+total+"\tcount: "+count);
         sli.close();
         //samReader.close();
         
@@ -350,9 +347,9 @@ public class Genotyper {
 		 * Testing read depth query- Remove later
 		 */
 		
-		/*int newReadDepth = 0;
-		newReadDepth = getReadDepth(args[2], "ecoli", 60005, 60050);
-		System.out.println("BAM Read Depth:" + newReadDepth);*/
+		double newReadDepth = 0;
+		newReadDepth = getReadDepth(samReader, "chr12", 60001, 60015);
+		System.out.println("BAM Read Depth:" + newReadDepth);
 		
 		/*
 		 * parse the algorithm parameter from command line
@@ -360,7 +357,7 @@ public class Genotyper {
 		SV_ALGORITHM algorithm = SV_ALGORITHM.SOCRATES;
 		
 		try{
-			algorithm = SV_ALGORITHM.valueOf(args[3].toUpperCase());
+			algorithm = SV_ALGORITHM.valueOf(args[2].toUpperCase());
 			System.out.println("Interpreting input as "+algorithm+" breakpoints");
 		} catch (IllegalArgumentException e){
 			System.out.println("Unknown SV algorithm identifier.");
