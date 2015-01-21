@@ -12,7 +12,6 @@ import java.util.StringTokenizer;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-import com.sun.awt.AWTUtilities.Translucency;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.Interval;
@@ -267,13 +266,9 @@ public class Genotyper {
 //		System.out.println("Done");
 //		input.close();
 //		return null;
-<<<<<<< HEAD
 		//TabixReader reader = new TabixReader("data/simulated_ecoli_1_simseq_s.mpileup.gz");
 		TabixReader reader = new TabixReader("../../BAM/simulated_ecoli_1_simseq_s.mpileup.gz");
-=======
 		//TabixReader reader = new TabixReader("data/simulated_chr12_1_simseq_s.mpileup.gz");
-		TabixReader reader = new TabixReader("../../BAM/simulated_chr12_1_simseq_s.mpileup.gz");
->>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 		TabixReader.Iterator iter = reader.query(0, 60002, 60010);
 		String line;
 		while( (line=iter.next()) != null){
@@ -342,8 +337,8 @@ public class Genotyper {
 	public static void main(String[] args) throws IOException {
 		//Start Time
 		long startTime = System.nanoTime();
-		
-<<<<<<< HEAD
+	
+
 		if(args.length < 5){
 			//System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
 			System.err.println("Usage: <list of breakpoints> <BAM file> <algorithm (Socrates/Delly)> <mean coverage> <coverage std>");
@@ -351,24 +346,12 @@ public class Genotyper {
 		}
 		
 		SAMFileReader  samReader=new  SAMFileReader(new  File(args[1]));
-=======
-		if(args.length < 4){
-			System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
-			System.exit(0);
-		}
-		
-		SAMFileReader  samReader=new  SAMFileReader(new  File(args[2]));
->>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 		/*
 		 * Testing read depth query- Remove later
 		 */
 		
 		/*int newReadDepth = 0;
-<<<<<<< HEAD
 		newReadDepth = getReadDepth(args[2], "ecoli", 60005, 60050);
-=======
-		newReadDepth = getReadDepth(args[2], "chr12", 60005, 60050);
->>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 		System.out.println("BAM Read Depth:" + newReadDepth);*/
 		
 		/*
@@ -463,13 +446,8 @@ public class Genotyper {
 		
 		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
 		String goldStandard = args[1].substring(0, 35)+"_2.fa";
-<<<<<<< HEAD
 		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
 		//compareToGoldStandard(goldStandard, genomicNodes, 150, false);
-=======
-		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
-		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
->>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 		
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
@@ -656,11 +634,7 @@ public class Genotyper {
 						} else if(e.getType() == EVENT_TYPE.DEL){
 							//check for deletion
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
-<<<<<<< HEAD
 							double readDepth = getReadDepth(samReader, "ecoli", e.getC1().getPos()+1, e.getC2().getPos()-1);
-=======
-							double readDepth = getReadDepth(samReader, "chr12", e.getC1().getPos()+1, e.getC2().getPos()-1);
->>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 							if(readDepth > mean-interval){
 								deleteEvents.add(e);
 								skipEvents.add(e);
@@ -668,11 +642,7 @@ public class Genotyper {
 							}
 						} else if(e.getType() == EVENT_TYPE.TAN){
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
-<<<<<<< HEAD
 							double readDepth = getReadDepth(samReader, "ecoli", e.getC1().getPos()+1, e.getC2().getPos()-1);
-=======
-							double readDepth = getReadDepth(samReader, "chr12", e.getC1().getPos()+1, e.getC2().getPos()-1);
->>>>>>> 51d96482e44a0b4e1a6634a2f8b90c9e70d71ddc
 //							//double flank = (meanReadDepth(reader, e.getC1().getPos()-200, e.getC1().getPos()) + meanReadDepth(reader, e.getC2().getPos(), e.getC2().getPos()+200))/2;
 							if(readDepth < mean+interval){
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
