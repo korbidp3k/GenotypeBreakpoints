@@ -317,7 +317,6 @@ public class Genotyper {
             count++;
             //System.out.println("POS="+pos+" depth:"+depth);
             }
-        System.out.println("total: "+total+"\tcount: "+count);
         sli.close();
         //samReader.close();
         
@@ -343,13 +342,6 @@ public class Genotyper {
 		}
 		
 		SAMFileReader  samReader=new  SAMFileReader(new  File(args[1]));
-		/*
-		 * Testing read depth query- Remove later
-		 */
-		
-		double newReadDepth = 0;
-		newReadDepth = getReadDepth(samReader, "chr12", 60001, 60015);
-		System.out.println("BAM Read Depth:" + newReadDepth);
 		
 		/*
 		 * parse the algorithm parameter from command line
