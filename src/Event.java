@@ -1,7 +1,7 @@
 import java.util.StringTokenizer;
 
 
-enum EVENT_TYPE {INS, INV1, INV2, DEL, TAN, INVTX1, INVTX2, ITX1, ITX2, XXX, COMPLEX_INVERSION, COMPLEX_INVERTED_DUPLICATION, COMPLEX_DUPLICATION, COMPLEX_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_DUPLICATION};
+enum EVENT_TYPE {INS, INV1, INV2, DEL, TAN, INVTX1, INVTX2, ITX1, ITX2, XXX, COMPLEX_INVERSION, COMPLEX_INVERTED_DUPLICATION, COMPLEX_DUPLICATION, COMPLEX_TRANSLOCATION, COMPLEX_INVERTED_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION, COMPLEX_INTERCHROMOSOMAL_DUPLICATION};
 
 public class Event {
 
@@ -47,10 +47,12 @@ public class Event {
 		EVENT_TYPE type = classifySocratesBreakpoint(c1, o1, c2, o2);
 		
 		//look for additional information at the end of the call
-		for(int i=0; i<19; i++){
+		int i = 0;
+		while(i<19 && t.hasMoreTokens()){
+      i++;
 			t.nextToken();
 		}
-		String additionalComments = t.nextToken();
+		String additionalComments = (t.hasMoreTokens()? t.nextToken() : "");
 		if(additionalComments.startsWith("Inserted sequence")){
 			String insert = additionalComments.substring("Inserted sequence: ".length());
 			return new Event(c1, c2, type, insert);
@@ -167,6 +169,58 @@ public class Event {
 			return EVENT_TYPE.COMPLEX_INVERSION;
 		} else if(t.equals("ITX")){
 			return EVENT_TYPE.INV1;
+		} else {
+			return EVENT_TYPE.XXX;
+		}
+	}
+
+
+	public static Event createNewEventFromGustafOutput(String output) {
+		StringTokenizer t = new StringTokenizer(output, "\t");
+		
+		String chr1 = t.nextToken();
+		t.nextToken();
+		EVENT_TYPE type = classifyGustafBreakpoint(t.nextToken());
+		int p1 = Integer.parseInt(t.nextToken());
+		int p2 = Integer.parseInt(t.nextToken());
+		t.nextToken();
+		String o = t.nextToken();
+		if(type==EVENT_TYPE.INV1 && o.equals("-"))
+			type = EVENT_TYPE.INV2;
+		t.nextToken();
+		String info = t.nextToken();
+		StringTokenizer i = new StringTokenizer(info, "=;");
+		i.nextToken();
+		i.nextToken();
+		String d = i.nextToken();
+		String chr2;
+		if(d.equals("endChr")){
+			chr2 = i.nextToken();
+			i.nextToken();
+			p2 = Integer.parseInt(i.nextToken());
+		} else if (d.equals("size")) {
+			chr2 = chr1;
+		} else {
+			System.err.println("Confusion in the Gustaf camp!");
+			chr2=null;
+		}
+		
+		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
+		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
+		
+		return new Event(c1, c2, type);
+	}
+	private static EVENT_TYPE classifyGustafBreakpoint(String t){
+		if(t.equals("deletion")){
+			return EVENT_TYPE.DEL;
+		} else if (t.equals("duplication")){
+			return EVENT_TYPE.TAN;
+		} else if (t.equals("inversion")){
+			return EVENT_TYPE.INV1;
+		} else if(t.equals("ITX")){
+			return EVENT_TYPE.INV1;
+		} else if (t.equals("insertion")) {
+			return EVENT_TYPE.INS;
 		} else {
 			return EVENT_TYPE.XXX;
 		}

@@ -102,7 +102,7 @@ public class Genotyper {
 	public static void compareToGoldStandard(String goldFileName, Hashtable<String, TreeSet<GenomicNode>> genomicNodes, int margin, boolean compareStrictly) throws IOException {
 		BufferedReader gold = new BufferedReader(new FileReader(goldFileName));
 		String goldLine = gold.readLine();
-		Iterator<GenomicNode> iter = genomicNodes.get("ecoli").iterator();
+		Iterator<GenomicNode> iter = genomicNodes.get("gi|260447279|gb|CP001637.1|").iterator();
 		GenomicNode n = iter.next();
 		while( n.getEvents().size()==0 ){
 			n = iter.next();
@@ -122,14 +122,16 @@ public class Genotyper {
 			typeConversion.put("INVERSION", EVENT_TYPE.COMPLEX_INVERSION);
 			typeConversion.put("DELETION", EVENT_TYPE.DEL);
 			typeConversion.put("TANDEM", EVENT_TYPE.TAN);
-			typeConversion.put("INSERTION", EVENT_TYPE.INS);
-			typeConversion.put("DUPLICATION", EVENT_TYPE.COMPLEX_DUPLICATION);
+			//typeConversion.put("INSERTION", EVENT_TYPE.INS);
+			typeConversion.put("INSERTION", EVENT_TYPE.COMPLEX_DUPLICATION);
 			typeConversion.put("TRANSLOCATION", EVENT_TYPE.COMPLEX_TRANSLOCATION);
+			typeConversion.put("INVERTED_TRANSLOCATION", EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION);
+			typeConversion.put("INVERTED_INSERTION", EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION);
 		}
 		
 		
 		while(goldLine != null && e != null){
-			StringTokenizer st = new StringTokenizer(goldLine, ":-\t");
+			StringTokenizer st = new StringTokenizer(goldLine, ":-\t ");
 			String type = st.nextToken();
 			String chr = st.nextToken();
 			int start = Integer.parseInt(st.nextToken());
@@ -138,7 +140,7 @@ public class Genotyper {
 				goldLine = gold.readLine();
 				continue;
 			}
-			GenomicCoordinate compare = (e.getType() == EVENT_TYPE.COMPLEX_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION? ((ComplexEvent)e).getInsertionPoint() : e.getC1());
+			GenomicCoordinate compare = (e.getType() == EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION? ((ComplexEvent)e).getInsertionPoint() : e.getC1());
 			if(compare.distanceTo(new GenomicCoordinate(chr, start)) > margin) {
 				if(compare.compareTo(new GenomicCoordinate(chr, start)) < 0) {
 					//half TP?
@@ -151,7 +153,7 @@ public class Genotyper {
 					
 				} else {
 					if(!recalledOnce.contains(goldLine) || compareStrictly){
-						//System.out.println("FN: "+goldLine);
+						System.out.println("FN: "+goldLine);
 						statsByType.get(typeConversion.get(type))[2]++;
 					}
 					goldLine = gold.readLine();
@@ -317,7 +319,7 @@ public class Genotyper {
             count++;
             //System.out.println("POS="+pos+" depth:"+depth);
             }
-        System.out.println("total: "+total+"\tcount: "+count);
+        //System.out.println("total: "+total+"\tcount: "+count);
         sli.close();
         //samReader.close();
         
@@ -325,7 +327,7 @@ public class Genotyper {
     }
 	
 	
-	enum SV_ALGORITHM {SOCRATES, DELLY, CREST};
+	enum SV_ALGORITHM {SOCRATES, DELLY, CREST, GUSTAF};
 	
 	/**
 	 * @param args
@@ -338,18 +340,11 @@ public class Genotyper {
 
 		if(args.length < 5){
 			//System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
-			System.err.println("Usage: <list of breakpoints> <BAM file> <algorithm (Socrates/Delly)> <mean coverage> <coverage std>");
+			System.err.println("Usage: <list of breakpoints> <BAM file> <algorithm (Socrates/Delly/Crest/Gustaf)> <mean coverage> <coverage std>");
 			System.exit(0);
 		}
 		
 		SAMFileReader  samReader=new  SAMFileReader(new  File(args[1]));
-		/*
-		 * Testing read depth query- Remove later
-		 */
-		
-		double newReadDepth = 0;
-		newReadDepth = getReadDepth(samReader, "chr12", 60001, 60015);
-		System.out.println("BAM Read Depth:" + newReadDepth);
 		
 		/*
 		 * parse the algorithm parameter from command line
@@ -386,6 +381,7 @@ public class Genotyper {
 			case SOCRATES: 	e = Event.createNewEventFromSocratesOutput(line); 	break;
 			case DELLY: 	e = Event.createNewEventFromDellyOutput(line); 		break;
 			case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
+			case GUSTAF: e = Event.createNewEventFromGustafOutput(line);	  if(e.size()<50) continue; break;
 			default:		e = null;
 			}
 			allEvents.add(e);
@@ -412,6 +408,7 @@ public class Genotyper {
 		case SOCRATES: 	maxDistanceForNodeMerge = 15; break;
 		case DELLY:		maxDistanceForNodeMerge = 250; break;
 		case CREST:		maxDistanceForNodeMerge = 15; break;
+		case GUSTAF:	maxDistanceForNodeMerge = 15; break;
 		default:		System.err.println("Node merge distance set to 0!");
 		}
 		//static parameter to classify single inversions as FP or TP
@@ -442,9 +439,9 @@ public class Genotyper {
 		}
 		
 		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
-		String goldStandard = args[1].substring(0, 35)+"_2.fa";
-		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
-		//compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+		String goldStandard = "/home/users/allstaff/schroeder/GenotypeBreakpoints/data/ecoli/SV_list_2.txt";
+		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
+		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 		
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
@@ -478,9 +475,12 @@ public class Genotyper {
 									if(other1.compareTo(other2) > 0){
 										Event e3 = other1.existsDeletionEventTo(other2);
 										if(e3 != null){
-											System.out.println("TRANSLO!");
+											 GenomicCoordinate invstart = (e2.getNode(true) == currentNode ? e2.getC2() : e2.getC1() ),
+											                	 invend   = (e1.getNode(true) == currentNode ? e1.getC2() : e1.getC1() ),
+																				 insert   = (e1.getNode(true) == currentNode ? e1.getC1() : e1.getC2() );
+											 newComplexEvent = new ComplexEvent(invstart, invend, EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION, (new Event[] {e1, e2, e3}), currentNode, insert);
 										} else {
-											System.out.println("INVDUP!"+e1+e2);
+											//System.out.println("INVDUP!"+e1+e2);
 											GenomicCoordinate invstart = (e2.getNode(true) == currentNode ? e2.getC2() : e2.getC1() ),
 															  invend   = (e1.getNode(true) == currentNode ? e1.getC2() : e1.getC1() ),
 															  insert   = (e1.getNode(true) == currentNode ? e1.getC1() : e1.getC2() );
@@ -631,19 +631,24 @@ public class Genotyper {
 						} else if(e.getType() == EVENT_TYPE.DEL){
 							//check for deletion
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
-							double readDepth = getReadDepth(samReader, "ecoli", e.getC1().getPos()+1, e.getC2().getPos()-1);
+							double readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos()+1, e.getC2().getPos()-1);
 							if(readDepth > mean-interval){
 								deleteEvents.add(e);
 								skipEvents.add(e);
 								continue;
+							} else {
+								System.out.print("read depth for event: "+readDepth+"\t");
 							}
 						} else if(e.getType() == EVENT_TYPE.TAN){
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
-							double readDepth = getReadDepth(samReader, "ecoli", e.getC1().getPos()+1, e.getC2().getPos()-1);
+							double readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos()+1, e.getC2().getPos()-1);
 //							//double flank = (meanReadDepth(reader, e.getC1().getPos()-200, e.getC1().getPos()) + meanReadDepth(reader, e.getC2().getPos(), e.getC2().getPos()+200))/2;
 							if(readDepth < mean+interval){
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
 								deleteEvents.add(e);
+								continue;
+							} else {
+								System.out.print("read depth for event: "+readDepth+"\t");
 							}
 						}
 						
@@ -665,8 +670,8 @@ public class Genotyper {
 		}
 		//System.out.println("Total events: "+totalEvents);
 		
-		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
-		//compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
+		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 	
 		//graphVisualisation("data/simul_ecoli_graph.gv", genomicNodes);
 		
