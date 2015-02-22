@@ -1,5 +1,8 @@
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+
+
 
 
 public class GenomicNode implements Comparable<GenomicNode>{

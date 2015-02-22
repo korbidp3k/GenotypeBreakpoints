@@ -18,6 +18,53 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SamLocusIterator;
 
 
+class EventIterator implements Iterator<Event> {
+	
+	private Iterator<GenomicNode> myNodeIterator;
+	private GenomicNode currentNode;
+	private int nextEventIndex;
+
+	public EventIterator(Iterator<GenomicNode> nodeIterator){
+		myNodeIterator = nodeIterator;
+		currentNode = nodeIterator.next();
+		nextEventIndex = 0;
+	}
+	
+	@Override
+	public boolean hasNext() {
+		System.err.println("Method in EventIterator should not be used!");
+		return false;
+	}
+
+	@Override
+	public Event next() {
+		if(currentNode == null){
+			return null;
+		}
+		if(nextEventIndex < currentNode.getEvents().size()) {
+			nextEventIndex ++;
+			return currentNode.getEvents().get(nextEventIndex - 1); 
+		}
+		nextEventIndex = 1;
+		while(currentNode!=null && currentNode.getEvents().size() == 0){
+			if (myNodeIterator.hasNext())
+				currentNode = myNodeIterator.next();
+			else
+				currentNode = null;
+		}	
+		if(currentNode != null)
+			return currentNode.getEvents().get(0);
+		else 
+			return null;
+	}
+
+	@Override
+	public void remove() {
+		System.err.println("Method in EventIterator should not be used!");
+	}
+	
+}
+
 public class Genotyper {
 	
 	private static void addEventToNodeList(Event e, Hashtable<String, TreeSet<GenomicNode>> genomicNodes, boolean useFirstCoordinate){
