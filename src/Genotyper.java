@@ -102,7 +102,10 @@ public class Genotyper {
 	public static void compareToGoldStandard(String goldFileName, Hashtable<String, TreeSet<GenomicNode>> genomicNodes, int margin, boolean compareStrictly) throws IOException {
 		BufferedReader gold = new BufferedReader(new FileReader(goldFileName));
 		String goldLine = gold.readLine();
-		Iterator<GenomicNode> iter = genomicNodes.get("gi|260447279|gb|CP001637.1|").iterator();
+		String currentChromosome = goldLine.replace(":","\t").split( "\t")[1];
+		System.out.println("Working on first chromosome: "+currentChromosome);
+		//Iterator<GenomicNode> iter = genomicNodes.get("gi|260447279|gb|CP001637.1|").iterator();
+		Iterator<GenomicNode> iter = genomicNodes.get(currentChromosome).iterator();
 		GenomicNode n = iter.next();
 		while( n.getEvents().size()==0 ){
 			n = iter.next();
@@ -127,20 +130,75 @@ public class Genotyper {
 			typeConversion.put("TRANSLOCATION", EVENT_TYPE.COMPLEX_TRANSLOCATION);
 			typeConversion.put("INVERTED_TRANSLOCATION", EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION);
 			typeConversion.put("INVERTED_INSERTION", EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION);
+			typeConversion.put("DUPLICATION", EVENT_TYPE.COMPLEX_DUPLICATION);
+			typeConversion.put("INVERTED_DUPLICATION", EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION);
+			typeConversion.put("INTERCHROMOSOMAL_TRANSLOCATION", EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION);
+			typeConversion.put("INTERCHROMOSOMAL_INVERTED_TRANSLOCATION", EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_TRANSLOCATION);
+			typeConversion.put("INTERCHROMOSOMAL_DUPLICATION", EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION);
+			typeConversion.put("INTERCHROMOSOMAL_INVERTED_DUPLICATION", EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION);
 		}
 		
 		
-		while(goldLine != null && e != null){
+		while(goldLine != null ){
 			StringTokenizer st = new StringTokenizer(goldLine, ":-\t ");
 			String type = st.nextToken();
 			String chr = st.nextToken();
+			//TODO: what if the SVs are on a different chromosome?
+			if(!currentChromosome.equals(chr)) {
+				//TODO: discard remaining events on old chromosome
+				currentChromosome = chr;
+				System.out.println("Working on chromosome: "+currentChromosome);
+				iter = genomicNodes.get(currentChromosome).iterator();
+				n = iter.next();
+				e = n.getEvents().get(0);
+			}
+
 			int start = Integer.parseInt(st.nextToken());
 			//int end = Integer.parseInt(st.nextToken());
-			if(type.equals("SNP") || type.equals("JOIN")){
+			if(type.equals("SNP") || type.equals("JOIN") || type.equals("TRANSLOCATION_DELETION")){
 				goldLine = gold.readLine();
 				continue;
 			}
-			GenomicCoordinate compare = (e.getType() == EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION? ((ComplexEvent)e).getInsertionPoint() : e.getC1());
+			if(e==null){
+				System.out.println("DEFINITE FN: "+goldLine);
+				goldLine = gold.readLine();
+				continue;
+			}
+			GenomicCoordinate compare;
+			if(e.getType() == EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION 
+					|| e.getType() == EVENT_TYPE.COMPLEX_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION
+					|| e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION
+					|| e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION) {
+				compare = ((ComplexEvent)e).getInsertionPoint();
+				tryAgain.add(e);
+			} else if(tryAgain.contains(e)){
+				compare = e.getC2();
+			} else {
+				compare = e.getC1();
+			}
+			if(!compare.getChr().equals(chr)) {
+				//Fusion on different chr than goldLine
+				if(compare.getChr().compareTo(chr) < 0){
+					System.out.println("DEFAULT FP?");
+					while(n!=null && ( n.getEvents().size()==0 || skip.contains(n.getEvents().get(0)))){
+						if (iter.hasNext())
+							n = iter.next();
+						else
+						n = null;
+					}
+					if(n!=null)
+						e = n.getEvents().get(0);
+					else 
+						e = null;
+					continue;
+				} else {
+					System.out.println("DEFAULT FN?");
+					goldLine= gold.readLine();
+					continue;
+				}
+			}
+
+			//GenomicCoordinate compare = (e.getType() == EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION? ((ComplexEvent)e).getInsertionPoint() : e.getC1());
 			if(compare.distanceTo(new GenomicCoordinate(chr, start)) > margin) {
 				if(compare.compareTo(new GenomicCoordinate(chr, start)) < 0) {
 					//half TP?
@@ -190,9 +248,9 @@ public class Genotyper {
 				e = null;
 		}
 		while(goldLine!=null){
-			if(! goldLine.contains("SNP") && (!recalledOnce.contains(goldLine) || compareStrictly)){
+			if(! goldLine.contains("SNP") && ! goldLine.contains("TRANSLOCATION_DELETION") && (!recalledOnce.contains(goldLine) || compareStrictly)){
 				String type = (new StringTokenizer(goldLine)).nextToken();
-				//System.out.println("FN: "+goldLine);
+				System.out.println("FN: "+goldLine);
 				statsByType.get(typeConversion.get(type))[2]++;
 			}
 			goldLine = gold.readLine();
@@ -439,9 +497,10 @@ public class Genotyper {
 		}
 		
 		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
-		String goldStandard = "/home/users/allstaff/schroeder/GenotypeBreakpoints/data/ecoli/SV_list_2.txt";
-		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
-		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+		//String goldStandard = "/home/users/allstaff/schroeder/GenotypeBreakpoints/data/ecoli/SV_list_2.txt";
+		String goldStandard = "/home/users/allstaff/schroeder/ReadRefSimulation/human_test.fa";
+		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
+		//compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 		
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
@@ -572,7 +631,28 @@ public class Genotyper {
 										}
 									}
 								}
+								break;
 							}
+							case INVTX1: {
+								if(e2.getType() == EVENT_TYPE.INVTX2) {
+									GenomicNode other1 = e1.otherNode(currentNode), other2 = e2.otherNode(currentNode);
+									if(other1.getStart().onSameChromosome(other2.getStart()) && other1.getEnd().compareTo(other2.getStart()) > 0){
+										GenomicCoordinate eventStart = (e2.getNode(true)==currentNode? e2.getC2() : e2.getC1()),
+										 	eventEnd = (e1.getNode(true)==currentNode? e1.getC2() : e1.getC1()),
+											eventInsert = (e1.getNode(true)==currentNode? e1.getC1() : e1.getC2());
+									if(eventStart.compareTo(eventEnd) >= 0){
+										System.out.println("Fishes!");
+									}
+									Event e3 = other1.existsDeletionEventTo(other2);
+									if(e3 != null){
+										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_TRANSLOCATION, new Event[] {e1, e2, e3}, currentNode, eventInsert);
+									} else {
+										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
+									}
+								}
+							}
+							break;
+						}
 							
 							default: //don't even attempt other types
 						}
@@ -670,7 +750,7 @@ public class Genotyper {
 		}
 		//System.out.println("Total events: "+totalEvents);
 		
-		compareToGoldStandard(goldStandard, genomicNodes, 150, true);
+		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
 		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 	
 		//graphVisualisation("data/simul_ecoli_graph.gv", genomicNodes);

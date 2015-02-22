@@ -28,7 +28,8 @@ public class ComplexEvent extends Event{
 	public String toString(){
 		if(this.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION || this.getType() == EVENT_TYPE.COMPLEX_DUPLICATION 
 				|| this.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION || this.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION
-				|| this.getType() == EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION || this.getType() == EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION){
+				|| this.getType() == EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION || this.getType() == EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION
+				|| this.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION || this.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_TRANSLOCATION){
 			return this.getInsertionPoint()+" "+super.toString();
 		} else {
 			return super.toString();
