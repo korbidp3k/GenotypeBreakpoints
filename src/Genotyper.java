@@ -23,11 +23,13 @@ class EventIterator implements Iterator<Event> {
 	private Iterator<GenomicNode> myNodeIterator;
 	private GenomicNode currentNode;
 	private int nextEventIndex;
+	HashSet<Event> skipEvents;
 
-	public EventIterator(Iterator<GenomicNode> nodeIterator){
+	public EventIterator(Iterator<GenomicNode> nodeIterator, HashSet<Event> skip){
 		myNodeIterator = nodeIterator;
 		currentNode = nodeIterator.next();
 		nextEventIndex = 0;
+		skipEvents = skip;
 	}
 	
 	@Override
@@ -42,10 +44,14 @@ class EventIterator implements Iterator<Event> {
 			return null;
 		}
 		if(nextEventIndex < currentNode.getEvents().size()) {
+			Event e = currentNode.getEvents().get(nextEventIndex);
 			nextEventIndex ++;
-			return currentNode.getEvents().get(nextEventIndex - 1); 
+			if(skipEvents.contains(e))
+				return this.next();
+			else 
+				return e; 
 		}
-		nextEventIndex = 1;
+		nextEventIndex = 0;
 		while(currentNode!=null && currentNode.getEvents().size() == 0){
 			if (myNodeIterator.hasNext())
 				currentNode = myNodeIterator.next();
@@ -53,7 +59,7 @@ class EventIterator implements Iterator<Event> {
 				currentNode = null;
 		}	
 		if(currentNode != null)
-			return currentNode.getEvents().get(0);
+			return this.next();
 		else 
 			return null;
 	}
@@ -152,15 +158,14 @@ public class Genotyper {
 		String currentChromosome = goldLine.replace(":","\t").split( "\t")[1];
 		System.out.println("Working on first chromosome: "+currentChromosome);
 		//Iterator<GenomicNode> iter = genomicNodes.get("gi|260447279|gb|CP001637.1|").iterator();
-		Iterator<GenomicNode> iter = genomicNodes.get(currentChromosome).iterator();
-		GenomicNode n = iter.next();
-		while( n.getEvents().size()==0 ){
-			n = iter.next();
-		}
-		Event e = n.getEvents().get(0);
+		
 		HashSet<Event> skip = new HashSet<Event>();
 		HashSet<Event> tryAgain = new HashSet<Event>();
 		HashSet<String> recalledOnce = new HashSet<String>();
+		Iterator<GenomicNode> iter = genomicNodes.get(currentChromosome).iterator();
+		EventIterator events = new EventIterator(iter, skip);
+		Event e = events.next();
+		
 		Hashtable<EVENT_TYPE, int[]> statsByType = new Hashtable<EVENT_TYPE, int[]>();
 		for(EVENT_TYPE t: EVENT_TYPE.values()){
 			//the convention used below is: TP index 0, FP 1, and FN 2
@@ -196,8 +201,7 @@ public class Genotyper {
 				currentChromosome = chr;
 				System.out.println("Working on chromosome: "+currentChromosome);
 				iter = genomicNodes.get(currentChromosome).iterator();
-				n = iter.next();
-				e = n.getEvents().get(0);
+				e = events.next();
 			}
 
 			int start = Integer.parseInt(st.nextToken());
@@ -227,16 +231,7 @@ public class Genotyper {
 				//Fusion on different chr than goldLine
 				if(compare.getChr().compareTo(chr) < 0){
 					System.out.println("DEFAULT FP?");
-					while(n!=null && ( n.getEvents().size()==0 || skip.contains(n.getEvents().get(0)))){
-						if (iter.hasNext())
-							n = iter.next();
-						else
-						n = null;
-					}
-					if(n!=null)
-						e = n.getEvents().get(0);
-					else 
-						e = null;
+					e = events.next();
 					continue;
 				} else {
 					System.out.println("DEFAULT FN?");
@@ -279,20 +274,7 @@ public class Genotyper {
 				}
 				skip.add(e);
 			}
-			if (iter.hasNext())
-				n = iter.next();
-			else
-				n = null;
-			while(n!=null && ( n.getEvents().size()==0 || skip.contains(n.getEvents().get(0)))){
-				if (iter.hasNext())
-					n = iter.next();
-				else
-					n = null;
-			}
-			if(n!=null)
-				e = n.getEvents().get(0);
-			else 
-				e = null;
+			e = events.next();
 		}
 		while(goldLine!=null){
 			if(! goldLine.contains("SNP") && ! goldLine.contains("TRANSLOCATION_DELETION") && (!recalledOnce.contains(goldLine) || compareStrictly)){
@@ -302,17 +284,8 @@ public class Genotyper {
 			}
 			goldLine = gold.readLine();
 		}
-		while(n!=null){
-			if(n.getEvents().size()>0 && !skip.contains(n.getEvents().get(0))){
-				//System.out.println("FP: "+n.getEvents().get(0));
-				skip.add(e);
-				statsByType.get(e.getType())[1]++;
-			}
-			if(iter.hasNext())
-				n = iter.next();
-			else 
-				n = null;
-		}
+		e = events.next();
+		
 		int tps=0, fps=0, fns=0, htps=0;
 		System.out.println("Stats:\tTP\tHalf TP\tFP\tFN\tSen\tSpe");
 		for(EVENT_TYPE t: EVENT_TYPE.values()){
