@@ -83,7 +83,7 @@ public class Event {
 				return EVENT_TYPE.INVTX1;
 			else
 				return EVENT_TYPE.INVTX2;
-		} else if(o1.equals("+") && c1.compareTo(c2) < 0 || o1.equals("-") && c1.compareTo(c2) >= 0){
+		} else if(o1.equals("+") &&  c1.compareTo(c2) < 0 || o1.equals("-") && c1.compareTo(c2) >= 0){
 			return EVENT_TYPE.ITX1;
 		} else {
 			return EVENT_TYPE.ITX2;

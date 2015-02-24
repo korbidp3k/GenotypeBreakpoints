@@ -23,7 +23,8 @@ class EventIterator implements Iterator<Event> {
 	private Iterator<GenomicNode> myNodeIterator;
 	private GenomicNode currentNode;
 	private int nextEventIndex;
-	HashSet<Event> skipEvents;
+	private HashSet<Event> skipEvents;
+	private Event currentEvent;
 
 	public EventIterator(Iterator<GenomicNode> nodeIterator, HashSet<Event> skip){
 		myNodeIterator = nodeIterator;
@@ -44,14 +45,15 @@ class EventIterator implements Iterator<Event> {
 			return null;
 		}
 		if(nextEventIndex < currentNode.getEvents().size()) {
-			Event e = currentNode.getEvents().get(nextEventIndex);
+			currentEvent = currentNode.getEvents().get(nextEventIndex);
 			nextEventIndex ++;
-			if(skipEvents.contains(e))
+			if(skipEvents.contains(currentEvent))
 				return this.next();
 			else 
-				return e; 
+				return currentEvent; 
 		}
 		nextEventIndex = 0;
+		currentNode = (myNodeIterator.hasNext()? myNodeIterator.next() : null);
 		while(currentNode!=null && currentNode.getEvents().size() == 0){
 			if (myNodeIterator.hasNext())
 				currentNode = myNodeIterator.next();
@@ -62,6 +64,14 @@ class EventIterator implements Iterator<Event> {
 			return this.next();
 		else 
 			return null;
+	}
+	
+	public GenomicCoordinate getInsertionCoordinate() {
+		if(currentEvent.getNode(true) == currentNode){
+			return currentEvent.getC1();
+		} else {
+			return currentEvent.getC2();
+		}
 	}
 
 	@Override
@@ -152,7 +162,7 @@ public class Genotyper {
 	}
 	
 	
-	public static void compareToGoldStandard(String goldFileName, Hashtable<String, TreeSet<GenomicNode>> genomicNodes, int margin, boolean compareStrictly) throws IOException {
+	private static void compareToGoldStandard(String goldFileName, Hashtable<String, TreeSet<GenomicNode>> genomicNodes, int margin, boolean compareStrictly) throws IOException {
 		BufferedReader gold = new BufferedReader(new FileReader(goldFileName));
 		String goldLine = gold.readLine();
 		String currentChromosome = goldLine.replace(":","\t").split( "\t")[1];
@@ -201,6 +211,7 @@ public class Genotyper {
 				currentChromosome = chr;
 				System.out.println("Working on chromosome: "+currentChromosome);
 				iter = genomicNodes.get(currentChromosome).iterator();
+				events = new EventIterator(iter, skip);
 				e = events.next();
 			}
 
@@ -223,14 +234,14 @@ public class Genotyper {
 				compare = ((ComplexEvent)e).getInsertionPoint();
 				tryAgain.add(e);
 			} else if(tryAgain.contains(e)){
-				compare = e.getC2();
+				compare = events.getInsertionCoordinate();
 			} else {
-				compare = e.getC1();
+				compare = events.getInsertionCoordinate();
 			}
 			if(!compare.getChr().equals(chr)) {
 				//Fusion on different chr than goldLine
 				if(compare.getChr().compareTo(chr) < 0){
-					System.out.println("DEFAULT FP?");
+					System.out.println("DEFAULT FP? "+e);
 					e = events.next();
 					continue;
 				} else {
@@ -269,6 +280,8 @@ public class Genotyper {
 					goldLine = gold.readLine();
 				} else {
 					//System.out.println("Half TP: Type mismatch: "+e+" "+goldLine);
+					if(EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION == e.getType())
+						System.out.println("HTFP: "+e+" -> "+type	);
 					statsByType.get(e.getType())[3]++;
 					recalledOnce.add(goldLine);
 				}
@@ -518,9 +531,9 @@ public class Genotyper {
 		
 		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
 		//String goldStandard = "/home/users/allstaff/schroeder/GenotypeBreakpoints/data/ecoli/SV_list_2.txt";
-		String goldStandard = "/home/users/allstaff/schroeder/ReadRefSimulation/human_test.fa";
+		String goldStandard = "/Users/schroeder/Downloads/human_test.fa";
 		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
-		//compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 		
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
@@ -636,19 +649,27 @@ public class Genotyper {
 							case ITX1: {
 								if(e2.getType() == EVENT_TYPE.ITX2) {
 									GenomicNode other1 = e1.otherNode(currentNode), other2 = e2.otherNode(currentNode);
-									if(other1.getStart().onSameChromosome(other2.getStart()) && other1.getEnd().compareTo(other2.getStart()) < 0){
-										GenomicCoordinate eventStart = (e1.getNode(true)==currentNode? e1.getC2() : e1.getC1()), 
-												eventEnd = (e2.getNode(true)==currentNode? e2.getC2() : e2.getC1()),
-												eventInsert = (e1.getNode(true)==currentNode? e1.getC1() : e1.getC2());
-										if(eventStart.compareTo(eventEnd) >= 0){
-											System.out.println("Fishes!");
-										}
-										Event e3 = other1.existsDeletionEventTo(other2);
-										if(e3 != null){
-											newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION, new Event[] {e1, e2, e3}, currentNode, eventInsert);
-										} else {
-											newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
-										}
+									if(! other1.getStart().onSameChromosome(other2.getStart()) )
+										break;
+									GenomicCoordinate eventStart, eventEnd, eventInsert;
+									if(currentNode.compareTo(other1) < 0 && other1.getEnd().compareTo(other2.getStart()) < 0 ) {
+										eventStart = (e1.getNode(true)==currentNode? e1.getC2() : e1.getC1()); 
+										eventEnd = (e2.getNode(true)==currentNode? e2.getC2() : e2.getC1());
+									} else if (	currentNode.compareTo(other1) > 0 && other1.getStart().compareTo(other2.getEnd()) > 0) {
+										eventStart = (e2.getNode(true)==currentNode? e2.getC2() : e2.getC1());
+										eventEnd = (e1.getNode(true)==currentNode? e1.getC2() : e1.getC1());  
+									} else {
+										break;
+									}
+									eventInsert = (e1.getNode(true)==currentNode? e1.getC1() : e1.getC2());
+									if(eventStart.compareTo(eventEnd) >= 0){
+										System.out.println("Fishes!");
+									}
+									Event e3 = other1.existsDeletionEventTo(other2);
+									if(e3 != null){
+										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION, new Event[] {e1, e2, e3}, currentNode, eventInsert);
+									} else {
+										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
 									}
 								}
 								break;
@@ -706,6 +727,7 @@ public class Genotyper {
 		final double mean = Double.parseDouble(args[3]);
 		final double interval = 2*Double.parseDouble(args[4]);
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
+			System.out.println("Working on Entry: "+tableEntry.toString());
 			for(GenomicNode currentNode: tableEntry.getValue()){
 				if(currentNode.getEvents().size() > 1){
 					System.out.println("Node might be shifty: "+currentNode.getEvents().size()+" members!");

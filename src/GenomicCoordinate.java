@@ -13,7 +13,7 @@ class GenomicCoordinate implements Comparable<GenomicCoordinate>{
 				return -1;
 			if(this.pos > other.pos)
 				return 1;
-			return 0;
+			return this.chr.compareTo(other.chr);
 		}
 		return compareChromosomes(other);
 	}
