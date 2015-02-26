@@ -138,6 +138,39 @@ public class Event {
 	}
 	
 	
+	/*
+	 * Static function to handle the particularities of Delly output, and convert it into a general
+	 * purpose Event.
+	 */
+	public static Event createNewEventFromDellyOutputLatest(String output){
+		String[] bits = output.split("\t");
+		String chr1 = bits[0];
+		int p1 = Integer.parseInt(bits[1]);
+		String[] moreBits = bits[7].split(";");
+		String chr2 = moreBits[5].replace("CHR2=", "");
+		int p2 = Integer.parseInt(moreBits[6].replace("END=", ""));
+		String o = moreBits[7].replace("CT=", "");
+		String o1 = (Integer.parseInt(o.split("to")[0]) == 3? "+" : "-");
+		String o2 = (Integer.parseInt(o.split("to")[1]) == 3? "+" : "-");
+		
+		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
+		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
+		EVENT_TYPE type = classifySocratesBreakpoint(c1, o1, c2, o2);
+		
+		//System.out.println(chr1 +"\t"+ p1 +"\t"+ p2 +"\t" + type +"\t"+ typeT);
+		
+		return new Event(c1, c2, type);
+	}
+	/*
+	 * Function to classify a line of Delly output into a genomic event type.
+	 * The distinctions between INV1/2 etc are arbitrary, and have to be consistent across all the inputs.
+	 * c1 and c2 are always the same chromosome
+	 */
+	private static EVENT_TYPE classifyDellyBreakpointLatest(GenomicCoordinate c1, GenomicCoordinate c2){
+		return null;
+	}
+	
+	
 	public static Event createNewEventFromCrestOutput(String output) {
 		StringTokenizer t = new StringTokenizer(output, "\t");
 		

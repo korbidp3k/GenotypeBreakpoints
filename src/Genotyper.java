@@ -470,7 +470,7 @@ public class Genotyper {
 			Event e;
 			switch(algorithm){
 			case SOCRATES: 	e = Event.createNewEventFromSocratesOutput(line); 	break;
-			case DELLY: 	e = Event.createNewEventFromDellyOutput(line); 		break;
+			case DELLY: 	e = Event.createNewEventFromDellyOutputLatest(line);break;
 			case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
 			case GUSTAF: e = Event.createNewEventFromGustafOutput(line);	  if(e.size()<50) continue; break;
 			default:		e = null;
