@@ -163,6 +163,11 @@ public class Genotyper {
 	
 	
 	private static void compareToGoldStandard(String goldFileName, Hashtable<String, TreeSet<GenomicNode>> genomicNodes, int margin, boolean compareStrictly) throws IOException {
+		boolean checkAgain = true;
+		if(oldFns.size() == 0){
+			checkAgain = false;
+		}
+		
 		BufferedReader gold = new BufferedReader(new FileReader(goldFileName));
 		String goldLine = gold.readLine();
 		String currentChromosome = goldLine.replace(":","\t").split( "\t")[1];
@@ -265,6 +270,11 @@ public class Genotyper {
 				} else {
 					if(!recalledOnce.contains(goldLine) || compareStrictly){
 						System.out.println("FN: "+goldLine);
+						if(checkAgain && !oldFns.contains(goldLine)){
+							System. out.println("New FN: "+goldLine);
+						} else if (!checkAgain){
+							oldFns.add(goldLine);
+						}
 						statsByType.get(typeConversion.get(type))[2]++;
 					}
 					goldLine = gold.readLine();
@@ -276,15 +286,23 @@ public class Genotyper {
 //						|| type.equals("TANDEM") && e.getType()==EVENT_TYPE.TAN || type.equals("INSERTION") && e.getType()==EVENT_TYPE.COMPLEX_DUPLICATION
 //						|| type.equals("TRANSLOCATION") && e.getType()==EVENT_TYPE.COMPLEX_TRANSLOCATION || type.equals("INSERTION") && e.getType()==EVENT_TYPE.INS) {
 					//System.out.println("TP: "+e+" "+goldLine);
-					statsByType.get(e.getType())[0]++;
+					if(recalledOnce.contains(goldLine)){
+						//redundant TP?
+						System.out.println("Redundant TP!");
+					} else {
+						statsByType.get(e.getType())[0]++;
+					}
 					goldLine = gold.readLine();
 				} else {
 					//System.out.println("Half TP: Type mismatch: "+e+" "+goldLine);
-					if(EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION == e.getType())
-						System.out.println("HTFP: "+e+" -> "+type	);
-					statsByType.get(e.getType())[3]++;
-					recalledOnce.add(goldLine);
+					if(recalledOnce.contains(goldLine)){
+						//redundant HTP?
+						System.out.println("Redundant HTP!");
+					} else {
+						statsByType.get(e.getType())[3]++;
+					}			
 				}
+				recalledOnce.add(goldLine);
 				skip.add(e);
 			}
 			e = events.next();
@@ -308,7 +326,7 @@ public class Genotyper {
 			System.out.println(t+"\t"+stats[0]+"\t"+stats[3]+"\t"+stats[1]+"\t"+stats[2]+"\t"+sen+"\t"+spe);
 			tps+=stats[0]; fps+=stats[1]; fns+=stats[2]; htps +=stats[3];
 		}
-		System.out.println("Total\t"+tps+"\t"+htps+"\t"+fps+"\t"+fns+"\t"+((double)tps/(tps+fns))+"\t"+((double)tps/(tps+fps)));
+		System.out.println("Total\t"+tps+"\t"+htps+"\t"+fps+"\t"+fns+"\t"+((double)(tps+htps)/(tps+htps+fns))+"\t"+((double)(tps+htps)/(tps+htps+fps)));
 		System.out.println("Accuracy:\t"+((double)tps/(tps+fps+fns))+"\t"+((double)(tps+htps)/(tps+fps+fns+htps)));
 		gold.close();
 	}
@@ -420,6 +438,8 @@ public class Genotyper {
 	
 	enum SV_ALGORITHM {SOCRATES, DELLY, CREST, GUSTAF};
 	
+	
+	static ArrayList<String> oldFns = new ArrayList<String>();
 	/**
 	 * @param args
 	 * @throws IOException 
@@ -497,7 +517,7 @@ public class Genotyper {
 		int maxDistanceForNodeMerge = 0;
 		switch(algorithm){
 		case SOCRATES: 	maxDistanceForNodeMerge = 15; break;
-		case DELLY:		maxDistanceForNodeMerge = 250; break;
+		case DELLY:		maxDistanceForNodeMerge = 100; break;
 		case CREST:		maxDistanceForNodeMerge = 15; break;
 		case GUSTAF:	maxDistanceForNodeMerge = 15; break;
 		default:		System.err.println("Node merge distance set to 0!");
