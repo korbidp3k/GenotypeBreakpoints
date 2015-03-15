@@ -551,9 +551,14 @@ public class Genotyper {
 		
 		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
 		//String goldStandard = "/home/users/allstaff/schroeder/GenotypeBreakpoints/data/ecoli/SV_list_2.txt";
-		String goldStandard = "/Users/schroeder/Downloads/human_test.fa";
+		
+		String goldStandard = null;
+		if(args.length > 5){
+			goldStandard = args[5];
+		}
 		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
-		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+		if(goldStandard != null)
+			compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 		
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
@@ -759,8 +764,10 @@ public class Genotyper {
 					if(skipEvents.contains(e))
 						continue;
 					//if(currentNode.getEvents().size() < 2 && e instanceof ComplexEvent ){//&& e.otherNode(currentNode) != currentNode){// (e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION || e.getType()==EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION)){
-						e.processAdditionalInformation(); //TODO: this is a bit of a sly hack to classify insertions in Socrates... not sure how to do it more transparently. 						
-						if(e.getType() == EVENT_TYPE.INV1 || e.getType()==EVENT_TYPE.INV2){
+						e.processAdditionalInformation(); //TODO: this is a bit of a sly hack to classify insertions in Socrates... not sure how to do it more transparently. 	
+						switch(e.getType()) {
+						case INV1: 
+						case INV2:
 							skipEvents.add(e);
 							deleteEvents.add(e);
 							if(classifySimpleInversion) {
@@ -770,7 +777,8 @@ public class Genotyper {
 							}
 							else 
 								continue;
-						} else if(e.getType() == EVENT_TYPE.DEL){
+							break;
+						case DEL:
 							//check for deletion
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
 							double readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos()+1, e.getC2().getPos()-1);
@@ -781,9 +789,10 @@ public class Genotyper {
 							} else {
 								System.out.print("read depth for event: "+readDepth+"\t");
 							}
-						} else if(e.getType() == EVENT_TYPE.TAN){
+							break;
+						case TAN:
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
-							double readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos()+1, e.getC2().getPos()-1);
+							readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos()+1, e.getC2().getPos()-1);
 //							//double flank = (meanReadDepth(reader, e.getC1().getPos()-200, e.getC1().getPos()) + meanReadDepth(reader, e.getC2().getPos(), e.getC2().getPos()+200))/2;
 							if(readDepth < mean+interval){
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
@@ -792,6 +801,24 @@ public class Genotyper {
 							} else {
 								System.out.print("read depth for event: "+readDepth+"\t");
 							}
+							break;
+						case COMPLEX_DUPLICATION:
+						case COMPLEX_INVERTED_DUPLICATION:
+						case COMPLEX_INTERCHROMOSOMAL_DUPLICATION:
+						case COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION:
+							if(e.getC2().getPos() - e.getC1().getPos() < 50){
+								//too small for RD check
+								break;
+							}
+							readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos(), e.getC2().getPos());
+							if(readDepth > mean-interval){
+								deleteEvents.add(e);
+								skipEvents.add(e);
+								continue;
+							} else {
+								System.out.print("read depth for event: "+readDepth+"\t");
+							}
+							break;
 						}
 						
 						System.out.println(e);
@@ -813,7 +840,8 @@ public class Genotyper {
 		//System.out.println("Total events: "+totalEvents);
 		
 		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
-		compareToGoldStandard(goldStandard, genomicNodes, 150, false);
+		if(goldStandard != null)
+			compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 	
 		//graphVisualisation("data/simul_ecoli_graph.gv", genomicNodes);
 		
