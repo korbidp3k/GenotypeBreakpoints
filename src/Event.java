@@ -186,14 +186,14 @@ public class Event {
 		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
 		
 		t.nextToken();
-		EVENT_TYPE type = classifyCrestBreakpoint(t.nextToken());
+		EVENT_TYPE type = classifyCrestBreakpoint(t.nextToken(), chr1, chr2, o1, o2);
 		
 		if(type == EVENT_TYPE.COMPLEX_INVERSION){
 			return new ComplexEvent(c1, c2, type, null, null);
 		}
 		return new Event(c1, c2, type);
 	}
-	private static EVENT_TYPE classifyCrestBreakpoint(String t){
+	private static EVENT_TYPE classifyCrestBreakpoint(String t, String c1, String c2, String o1, String o2){
 		if(t.equals("DEL")){
 			return EVENT_TYPE.DEL;
 		} else if (t.equals("INS")){
@@ -201,7 +201,21 @@ public class Event {
 		} else if (t.equals("INV")){
 			return EVENT_TYPE.COMPLEX_INVERSION;
 		} else if(t.equals("ITX")){
-			return EVENT_TYPE.INV1;
+			if(o1.equals("+"))
+				return EVENT_TYPE.INV1;
+			else 
+				return EVENT_TYPE.INV2;
+		} else if (t.equals("CTX")) {
+			if(o1.equals(o2)) {
+				if(o1.equals("+"))
+					return EVENT_TYPE.INVTX1;
+				else
+					return EVENT_TYPE.INVTX2;
+			} else if(o1.equals("+") &&  c1.compareTo(c2) < 0 || o1.equals("-") && c1.compareTo(c2) >= 0){
+				return EVENT_TYPE.ITX1;
+			} else {
+				return EVENT_TYPE.ITX2;
+			}
 		} else {
 			return EVENT_TYPE.XXX;
 		}
