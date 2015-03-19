@@ -9,7 +9,13 @@ public class Event {
 	private EVENT_TYPE type;
 	private GenomicNode[] myNodes;
 	private String additionalInformation;
-	
+	private String id;
+	private String ref;
+	private String alt;
+	private String qual;
+	private String filter;
+	private String info;
+		
 	public Event(GenomicCoordinate c1, GenomicCoordinate c2, EVENT_TYPE type){
 		if(c1.compareTo(c2) < 0){
 			this.c1 = c1;
@@ -27,6 +33,25 @@ public class Event {
 		this.additionalInformation = additionalInformation;
 	}
 
+	/*Create event with VCF Info*/
+	public Event(GenomicCoordinate c1, GenomicCoordinate c2, EVENT_TYPE type, String id, String ref, String alt, String qual, String filter, String info){
+		if(c1.compareTo(c2) < 0){
+			this.c1 = c1;
+			this.c2 = c2;
+		} else {
+			this.c1 = c2;
+			this.c2 = c1;
+		}
+		this.type = type;
+		myNodes = new GenomicNode[2];
+		this.id=id;
+		this.ref=ref;
+		this.alt=alt;
+		this.qual=qual;
+		this.filter=filter;
+		this.info=info;
+	}
+	
 	/*
 	 * Static function to handle the particularities of Socrates output, and convert it into a general
 	 * purpose Event.
@@ -153,13 +178,22 @@ public class Event {
 		String o1 = (Integer.parseInt(o.split("to")[0]) == 3? "+" : "-");
 		String o2 = (Integer.parseInt(o.split("to")[1]) == 3? "+" : "-");
 		
+		String id=bits[2];
+		String ref=bits[3];
+		String alt=bits[4];
+		String qual=bits[5];
+		String filter=bits[6];
+		String info=bits[7];
+		
 		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
 		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
 		EVENT_TYPE type = classifySocratesBreakpoint(c1, o1, c2, o2);
 		
 		//System.out.println(chr1 +"\t"+ p1 +"\t"+ p2 +"\t" + type +"\t"+ typeT);
 		
-		return new Event(c1, c2, type);
+		return new Event(c1, c2, type, id, ref, alt, qual, filter, info);
+		//return new Event(c1, c2, type);
+		
 	}
 	/*
 	 * Function to classify a line of Delly output into a genomic event type.
@@ -336,4 +370,53 @@ public class Event {
 			this.type = EVENT_TYPE.INS;
 		}
 	}
+	
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getQual() {
+		return qual;
+	}
+
+	public void setQual(String qual) {
+		this.qual = qual;
+	}
+
+	public String getAlt() {
+		return alt;
+	}
+
+	public void setAlt(String alt) {
+		this.alt = alt;
+	}
+
+	public String getFilter() {
+		return filter;
+	}
+
+	public void setFilter(String filter) {
+		this.filter = filter;
+	}
+
+	public String getRef() {
+		return ref;
+	}
+
+	public void setRef(String ref) {
+		this.ref = ref;
+	}
+
+	public String getInfo() {
+		return info;
+	}
+
+	public void setInfo(String info) {
+		this.info = info;
+	}
+
 }
