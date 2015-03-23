@@ -216,7 +216,16 @@ public class Genotyper {
 			String chr = st.nextToken();
 			//TODO: what if the SVs are on a different chromosome?
 			if(!currentChromosome.equals(chr)) {
-				//TODO: discard remaining events on old chromosome
+				while(e!=null){
+					if(tryAgain.contains(e)){
+						System.out.println("FPFPFPFP: "+e);
+						statsByType.get(e.getType())[1]++;
+					} else {
+						tryAgain.add(e);
+					}
+					e = events.next();
+				}
+				
 				currentChromosome = chr;
 				System.out.println("Working on chromosome: "+currentChromosome);
 				iter = genomicNodes.get(currentChromosome).iterator();
@@ -234,14 +243,15 @@ public class Genotyper {
 				System.out.println("DEFINITE FN: "+goldLine);
 				goldLine = gold.readLine();
 				continue;
-			}
+			} 
+			
 			GenomicCoordinate compare;
 			if(e.getType() == EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION 
 					|| e.getType() == EVENT_TYPE.COMPLEX_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_TRANSLOCATION
 					|| e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_TRANSLOCATION || e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION
 					|| e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION || e.getType() == EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION) {
 				compare = ((ComplexEvent)e).getInsertionPoint();
-				tryAgain.add(e);
+				tryAgain.add(e); // do not attempt single coordinate events twice.
 			} else if(tryAgain.contains(e)){
 				compare = events.getInsertionCoordinate();
 			} else {
@@ -270,7 +280,7 @@ public class Genotyper {
 					} else {
 						tryAgain.add(e);
 					}
-					
+					e = events.next();
 				} else {
 					if(!recalledOnce.contains(goldLine) || compareStrictly){
 						System.out.println("FN: "+goldLine);
@@ -296,7 +306,9 @@ public class Genotyper {
 					} else {
 						statsByType.get(e.getType())[0]++;
 					}
-					goldLine = gold.readLine();
+					//goldLine = gold.readLine();
+					
+					
 				} else {
 					//System.out.println("Half TP: Type mismatch: "+e+" "+goldLine);
 					if(recalledOnce.contains(goldLine)){
@@ -304,12 +316,14 @@ public class Genotyper {
 						System.out.println("Redundant HTP!");
 					} else {
 						statsByType.get(e.getType())[3]++;
-					}			
+					}	
+					
 				}
 				recalledOnce.add(goldLine);
 				skip.add(e);
+				e = events.next();
 			}
-			e = events.next();
+			
 		}
 		while(goldLine!=null){
 			if(! goldLine.contains("SNP") && ! goldLine.contains("TRANSLOCATION_DELETION") && (!recalledOnce.contains(goldLine) || compareStrictly)){
@@ -561,7 +575,7 @@ public class Genotyper {
 		input.close();
 		
 		/*VCF Header*/
-		PrintWriter writer = new PrintWriter("/home/adrianto/Downloads/BAM/VCF.txt", "UTF-8");
+		PrintWriter writer = new PrintWriter("/Users/schroeder/Downloads/VCF.txt", "UTF-8");
 		createVCFHeader(writer);
 		
 		/*
@@ -950,14 +964,14 @@ public class Genotyper {
 								//too small for RD check
 								break;
 							}
-							readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos(), e.getC2().getPos());
-							if(readDepth > mean-interval){
-								deleteEvents.add(e);
-								skipEvents.add(e);
-								continue;
-							} else {
-								System.out.print("read depth for event: "+readDepth+"\t");
-							}
+//							readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos(), e.getC2().getPos());
+//							if(readDepth < mean+interval){
+//								deleteEvents.add(e);
+//								skipEvents.add(e);
+//								continue;
+//							} else {
+//								System.out.print("read depth for event: "+readDepth+"\t");
+//							}
 							break;
 						}
 						
