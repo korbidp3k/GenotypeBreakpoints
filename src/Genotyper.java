@@ -649,7 +649,8 @@ public class Genotyper {
 					e1 = currentNode.getEvents().get(i);
 					for(int j=0; j<currentNode.getEvents().size(); j++){
 						e2 = currentNode.getEvents().get(j);
-						if(e1 == e2 || removeEvents.contains(e2) || removeEvents.contains(e1))
+						if(e1 == e2 || removeEvents.contains(e2) || removeEvents.contains(e1) 
+								|| e1.otherNode(currentNode) == currentNode || e2.otherNode(currentNode) == currentNode)
 							continue;
 						switch(e1.getType()){
 							//inversions
