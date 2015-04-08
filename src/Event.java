@@ -9,6 +9,7 @@ public class Event {
 	private EVENT_TYPE type;
 	private GenomicNode[] myNodes;
 	private String additionalInformation;
+	private GenomicCoordinate Coord;
 	private String id;
 	private String ref;
 	private String alt;
@@ -417,6 +418,14 @@ public class Event {
 
 	public void setInfo(String info) {
 		this.info = info;
+	}
+
+	public GenomicCoordinate getCoord() {
+		return Coord;
+	}
+
+	public void setCoord(GenomicCoordinate coord) {
+		Coord = coord;
 	}
 
 }

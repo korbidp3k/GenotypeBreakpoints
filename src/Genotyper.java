@@ -477,6 +477,7 @@ public class Genotyper {
         output.write("##INFO=<ID=PRECISE,Number=0,Type=Flag,Description=\"Precise structural variation\">\n");
         output.write("##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n");
         output.write("##INFO=<ID=SVMETHOD,Number=1,Type=String,Description=\"Type of approach used to detect SV\">\n");
+        output.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
         
         //FILTER
         output.write("##FILTER=<ID=LowQual,Description=\"PE support below 3 or mapping quality below 20.\">\n");
@@ -507,7 +508,7 @@ public class Genotyper {
         output.write("##ALT=<ID=IVD,Description=\"Complex Inverted Interchromosomal Duplication\">\n");
 
         //Header Line
-        output.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n");
+        output.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\n");
 	}
 	
 	enum SV_ALGORITHM {SOCRATES, DELLY, CREST, GUSTAF};
@@ -575,7 +576,8 @@ public class Genotyper {
 		input.close();
 		
 		/*VCF Header*/
-		PrintWriter writer = new PrintWriter("/Users/schroeder/Downloads/VCF.txt", "UTF-8");
+		//PrintWriter writer = new PrintWriter("/Users/schroeder/Downloads/VCF.txt", "UTF-8");
+		PrintWriter writer = new PrintWriter("/home/adrianto/Downloads/VCF.txt", "UTF-8");
 		createVCFHeader(writer);
 		
 		/*
@@ -637,6 +639,9 @@ public class Genotyper {
 		if(goldStandard != null)
 			compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 		
+		String tempInfo = null;
+		String tmpOld=null;
+		String tmpNew=null;
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
 			for(GenomicNode currentNode: tableEntry.getValue()){
@@ -661,12 +666,26 @@ public class Genotyper {
 									GenomicCoordinate invend   = (e2.getC2().compareTo(e2.getC1()) < 0? e2.getC1() : e2.getC2());
 									//System.out.println(e1.getC1()+"\t"+e1.getC2()+"\t"+e2.getC1()+"\t"+e2.getC2()+"\t"+invstart+"\t"+invend);
 									newComplexEvent = new ComplexEvent(invstart, invend, EVENT_TYPE.COMPLEX_INVERSION, (new Event[] {e1, e2}), currentNode);
-									newComplexEvent.setId(e1.getId());
+									//newComplexEvent.setId(e1.getId());
+									newComplexEvent.setCoord(invstart);
+									newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 									newComplexEvent.setRef(e1.getRef());
 									newComplexEvent.setAlt("<CIV>");
 									newComplexEvent.setFilter(e1.getFilter());
 									newComplexEvent.setQual(e1.getQual());
-									newComplexEvent.setInfo(e1.getInfo());
+									tempInfo = e1.getInfo();
+									//System.out.println(tempInfo+"\n");
+									tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+									tmpNew = newComplexEvent.getAlt();
+									tempInfo=tempInfo.replace(tmpOld, tmpNew);
+									tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+									tmpNew = invend.getChr();
+									tempInfo=tempInfo.replace(tmpOld, tmpNew);
+									tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+									tmpNew = Integer.toString(invend.getPos());
+									tempInfo.replace(tmpOld, tmpNew);
+									//System.out.println(tempInfo+"\n"); 
+									newComplexEvent.setInfo(tempInfo);
 									//writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									//currentNode?
 									//System.out.println(currentNode.getStart().toString());
@@ -681,25 +700,53 @@ public class Genotyper {
 											                	 invend   = (e1.getNode(true) == currentNode ? e1.getC2() : e1.getC1() ),
 																				 insert   = (e1.getNode(true) == currentNode ? e1.getC1() : e1.getC2() );
 											 newComplexEvent = new ComplexEvent(invstart, invend, EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION, (new Event[] {e1, e2, e3}), currentNode, insert);
-											 newComplexEvent.setId(e1.getId());
-												newComplexEvent.setRef(e1.getRef());
-												newComplexEvent.setAlt("<CVT>");
-												newComplexEvent.setFilter(e1.getFilter());
-												newComplexEvent.setQual(e1.getQual());
-												newComplexEvent.setInfo(e1.getInfo());
-												//writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
+											 //newComplexEvent.setId(e1.getId());
+											 newComplexEvent.setCoord(invstart);
+											 newComplexEvent.setId(e1.getId()+"+"+e2.getId());
+											 newComplexEvent.setRef(e1.getRef());
+											 newComplexEvent.setAlt("<CVT>");
+											 newComplexEvent.setFilter(e1.getFilter());
+											 newComplexEvent.setQual(e1.getQual());
+											 tempInfo = e1.getInfo();
+											 //System.out.println(tempInfo+"\n");
+											 tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+											 tmpNew = newComplexEvent.getAlt();
+											 tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											 tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+											 tmpNew = invend.getChr();
+											 tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											 tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+											 tmpNew = Integer.toString(invend.getPos());
+											 tempInfo.replace(tmpOld, tmpNew);
+											 //System.out.println(tempInfo+"\n"); 
+											 newComplexEvent.setInfo(tempInfo);
+											 //writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 										} else {
 											//System.out.println("INVDUP!"+e1+e2);
 											GenomicCoordinate invstart = (e2.getNode(true) == currentNode ? e2.getC2() : e2.getC1() ),
 															  invend   = (e1.getNode(true) == currentNode ? e1.getC2() : e1.getC1() ),
 															  insert   = (e1.getNode(true) == currentNode ? e1.getC1() : e1.getC2() );
 											newComplexEvent = new ComplexEvent(invstart, invend, EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION, (new Event[] {e1, e2}), currentNode, insert);
-											newComplexEvent.setId(e1.getId());
+											//newComplexEvent.setId(e1.getId());
+											newComplexEvent.setCoord(invstart);
+											newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 											newComplexEvent.setRef(e1.getRef());
 											newComplexEvent.setAlt("<CVD>");
 											newComplexEvent.setFilter(e1.getFilter());
 											newComplexEvent.setQual(e1.getQual());
-											newComplexEvent.setInfo(e1.getInfo());
+											tempInfo = e1.getInfo();
+											 //System.out.println(tempInfo+"\n");
+											tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+											tmpNew = newComplexEvent.getAlt();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+											tmpNew = invend.getChr();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+											tmpNew = Integer.toString(invend.getPos());
+											tempInfo.replace(tmpOld, tmpNew);
+											//System.out.println(tempInfo+"\n"); 
+											newComplexEvent.setInfo(tempInfo);
 											//writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 										}
 									}
@@ -733,12 +780,26 @@ public class Genotyper {
 												GenomicCoordinate traninsert = (e2.getNode(true) == currentNode? e2.getC2() : e2.getC1());
 												GenomicNode hostingNode = (e2.getNode(true) == currentNode? e2.getNode(false) : e2.getNode(true));
 												newComplexEvent = new ComplexEvent(transtart, tranend, EVENT_TYPE.COMPLEX_TRANSLOCATION, (new Event[] {e1, e2, e3}), hostingNode, traninsert);
-												newComplexEvent.setId(e1.getId());
+												//newComplexEvent.setId(e1.getId());
+												newComplexEvent.setCoord(transtart);
+												newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 												newComplexEvent.setRef(e1.getRef());
 												newComplexEvent.setAlt("<TRA>");
 												newComplexEvent.setFilter(e1.getFilter());
 												newComplexEvent.setQual(e1.getQual());
-												newComplexEvent.setInfo(e1.getInfo());
+												tempInfo = e1.getInfo();
+												//System.out.println(tempInfo+"\n");
+												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+												tmpNew = newComplexEvent.getAlt();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+												tmpNew = tranend.getChr();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+												tmpNew = Integer.toString(tranend.getPos());
+												tempInfo.replace(tmpOld, tmpNew);
+												//System.out.println(tempInfo+"\n"); 
+												newComplexEvent.setInfo(tempInfo);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											} else {
 												//area under e3 is translocated
@@ -752,12 +813,26 @@ public class Genotyper {
 												}
 												GenomicCoordinate traninsert = (e2.getNode(true) == currentNode? e2.getC1() : e2.getC2());
 												newComplexEvent = new ComplexEvent(transtart, tranend, EVENT_TYPE.COMPLEX_TRANSLOCATION, (new Event[] {e1, e2, e3}), currentNode, traninsert);
-												newComplexEvent.setId(e1.getId());
+												newComplexEvent.setCoord(transtart);
+												//newComplexEvent.setId(e1.getId());
+												newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 												newComplexEvent.setRef(e1.getRef());
 												newComplexEvent.setAlt("<TRA>");
 												newComplexEvent.setFilter(e1.getFilter());
 												newComplexEvent.setQual(e1.getQual());
-												newComplexEvent.setInfo(e1.getInfo());
+												tempInfo = e1.getInfo();
+												 //System.out.println(tempInfo+"\n");
+												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+												tmpNew = newComplexEvent.getAlt();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+												tmpNew = tranend.getChr();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+												tmpNew = Integer.toString(tranend.getPos());
+												tempInfo.replace(tmpOld, tmpNew);
+												//System.out.println(tempInfo+"\n"); 
+												newComplexEvent.setInfo(tempInfo);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											}
 										}
@@ -770,12 +845,26 @@ public class Genotyper {
 												dupend   = (e2.getNode(true) == currentNode? e2.getC2() : e2.getC1());
 												insert   = (e1.getNode(true) == currentNode? e1.getC1() : e1.getC2());
 												newComplexEvent = new ComplexEvent(dupstart, dupend, EVENT_TYPE.COMPLEX_DUPLICATION, (new Event[] {e1, e2}), currentNode, insert);
-												newComplexEvent.setId(e1.getId());
+												newComplexEvent.setCoord(dupstart);
+												//newComplexEvent.setId(e1.getId());
+												newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 												newComplexEvent.setRef(e1.getRef());
 												newComplexEvent.setAlt("<DUP>");
 												newComplexEvent.setFilter(e1.getFilter());
 												newComplexEvent.setQual(e1.getQual());
-												newComplexEvent.setInfo(e1.getInfo());
+												tempInfo = e1.getInfo();
+												 //System.out.println(tempInfo+"\n");
+												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+												tmpNew = newComplexEvent.getAlt();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+												tmpNew = dupend.getChr();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+												tmpNew = Integer.toString(dupend.getPos());
+												tempInfo.replace(tmpOld, tmpNew);
+												//System.out.println(tempInfo+"\n"); 
+												newComplexEvent.setInfo(tempInfo);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											} else {
 												//duplication upstream of currentNode
@@ -783,12 +872,26 @@ public class Genotyper {
 												dupend   = (e1.getNode(true) == currentNode? e1.getC2() : e1.getC1());
 												insert   = (e2.getNode(true) == currentNode? e2.getC1() : e2.getC2());
 												newComplexEvent = new ComplexEvent(dupstart, dupend, EVENT_TYPE.COMPLEX_DUPLICATION, (new Event[] {e1, e2}), currentNode, insert);
-												newComplexEvent.setId(e1.getId());
+												newComplexEvent.setCoord(dupstart);
+												//newComplexEvent.setId(e1.getId());
+												newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 												newComplexEvent.setRef(e1.getRef());
 												newComplexEvent.setAlt("<DUP>");
 												newComplexEvent.setFilter(e1.getFilter());
 												newComplexEvent.setQual(e1.getQual());
-												newComplexEvent.setInfo(e1.getInfo());
+												tempInfo = e1.getInfo();
+												 //System.out.println(tempInfo+"\n");
+												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+												tmpNew = newComplexEvent.getAlt();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+												tmpNew = dupend.getChr();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+												tmpNew = Integer.toString(dupend.getPos());
+												tempInfo.replace(tmpOld, tmpNew);
+												//System.out.println(tempInfo+"\n"); 
+												newComplexEvent.setInfo(tempInfo);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											}
 											
@@ -820,21 +923,49 @@ public class Genotyper {
 									Event e3 = other1.existsDeletionEventTo(other2);
 									if(e3 != null){
 										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_TRANSLOCATION, new Event[] {e1, e2, e3}, currentNode, eventInsert);
-										newComplexEvent.setId(e1.getId());
+										newComplexEvent.setCoord(eventStart);
+										//newComplexEvent.setId(e1.getId());
+										newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 										newComplexEvent.setRef(e1.getRef());
 										newComplexEvent.setAlt("<CIT>");
 										newComplexEvent.setFilter(e1.getFilter());
 										newComplexEvent.setQual(e1.getQual());
-										newComplexEvent.setInfo(e1.getInfo());
+										tempInfo = e1.getInfo();
+										//System.out.println(tempInfo+"\n");
+										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+										tmpNew = newComplexEvent.getAlt();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+										tmpNew = eventEnd.getChr();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+										tmpNew = Integer.toString(eventEnd.getPos());
+										tempInfo.replace(tmpOld, tmpNew);
+										//System.out.println(tempInfo+"\n"); 
+										newComplexEvent.setInfo(tempInfo);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									} else {
 										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
-										newComplexEvent.setId(e1.getId());
+										newComplexEvent.setCoord(eventStart);
+										//newComplexEvent.setId(e1.getId());
+										newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 										newComplexEvent.setRef(e1.getRef());
 										newComplexEvent.setAlt("<CID>");
 										newComplexEvent.setFilter(e1.getFilter());
 										newComplexEvent.setQual(e1.getQual());
-										newComplexEvent.setInfo(e1.getInfo());
+										tempInfo = e1.getInfo();
+										//System.out.println(tempInfo+"\n");
+										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+										tmpNew = newComplexEvent.getAlt();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+										tmpNew = eventEnd.getChr();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+										tmpNew = Integer.toString(eventEnd.getPos());
+										tempInfo.replace(tmpOld, tmpNew);
+										//System.out.println(tempInfo+"\n"); 
+										newComplexEvent.setInfo(tempInfo);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									}
 								}
@@ -853,21 +984,49 @@ public class Genotyper {
 									Event e3 = other1.existsDeletionEventTo(other2);
 									if(e3 != null){
 										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_TRANSLOCATION, new Event[] {e1, e2, e3}, currentNode, eventInsert);
-										newComplexEvent.setId(e1.getId());
+										newComplexEvent.setCoord(eventStart);
+										//newComplexEvent.setId(e1.getId());
+										newComplexEvent.setId(e1.getId()+"+"+e2.getId()+"+"+e3.getId());
 										newComplexEvent.setRef(e1.getRef());
 										newComplexEvent.setAlt("<IVT>");
 										newComplexEvent.setFilter(e1.getFilter());
 										newComplexEvent.setQual(e1.getQual());
-										newComplexEvent.setInfo(e1.getInfo());
+										tempInfo = e1.getInfo();
+										//System.out.println(tempInfo+"\n");
+										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+										tmpNew = newComplexEvent.getAlt();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+										tmpNew = eventEnd.getChr();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+										tmpNew = Integer.toString(eventEnd.getPos());
+										tempInfo.replace(tmpOld, tmpNew);
+										//System.out.println(tempInfo+"\n"); 
+										newComplexEvent.setInfo(tempInfo);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									} else {
 										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
-										newComplexEvent.setId(e1.getId());
+										newComplexEvent.setCoord(eventStart);//
+										//newComplexEvent.setId(e1.getId());
+										newComplexEvent.setId(e1.getId()+"+"+e2.getId());
 										newComplexEvent.setRef(e1.getRef());
 										newComplexEvent.setAlt("<IVD>");
 										newComplexEvent.setFilter(e1.getFilter());
 										newComplexEvent.setQual(e1.getQual());
-										newComplexEvent.setInfo(e1.getInfo());
+										tempInfo = e1.getInfo();
+										//System.out.println(tempInfo+"\n");
+										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+										tmpNew = newComplexEvent.getAlt();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+										tmpNew = eventEnd.getChr();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+										tmpNew = Integer.toString(eventEnd.getPos());
+										tempInfo.replace(tmpOld, tmpNew);
+										//System.out.println(tempInfo+"\n"); 
+										newComplexEvent.setInfo(tempInfo);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									}
 								}
@@ -929,6 +1088,12 @@ public class Genotyper {
 								ComplexEvent e2 = new ComplexEvent(e.getC1(), e.getC2(), EVENT_TYPE.COMPLEX_INVERSION, new Event[] {e}, currentNode);
 								e = e2;
 								newEvents.add(e2);
+								e2.setId(e2.getId());
+								e2.setRef(e2.getRef());
+								e2.setAlt("<INV>");
+								e2.setFilter(e2.getFilter());
+								e2.setQual(e2.getQual());
+								e2.setInfo("aAaAa_INV_aAaAa");
 							}
 							else 
 								continue;
@@ -940,6 +1105,12 @@ public class Genotyper {
 							if(readDepth > mean-interval){
 								deleteEvents.add(e);
 								skipEvents.add(e);
+								//e.setId(e.getId());
+								e.setId("DEL_XXX + " + readDepth );
+								e.setAlt("<DEL>");
+								e.setFilter(e.getFilter());
+								e.setQual(e.getQual());
+								e.setInfo(e.getInfo());
 								continue;
 							} else {
 								System.out.print("read depth for event: "+readDepth+"\t");
@@ -952,6 +1123,11 @@ public class Genotyper {
 							if(readDepth < mean+interval){
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
 								deleteEvents.add(e);
+								e.setId("TAN_XXX + " + readDepth );
+								e.setAlt("<DEL>");
+								e.setFilter(e.getFilter());
+								e.setQual(e.getQual());
+								e.setInfo(e.getInfo());
 								continue;
 							} else {
 								System.out.print("read depth for event: "+readDepth+"\t");
@@ -1005,7 +1181,7 @@ public class Genotyper {
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
 			for(GenomicNode currentNode: tableEntry.getValue()){
 				for(Event e: currentNode.getEvents()){
-					writer.write(e.getC1().getChr()+"\t"+e.getC1().getPos()+"\t"+e.getId()+"\t"+e.getRef()+"\t"+e.getAlt()+"\t"+e.getQual()+"\t"+e.getFilter()+"\t"+e.getInfo()+"\n");
+					writer.write(e.getCoord().getChr()+"\t"+e.getCoord().getPos()+"\t"+e.getId()+"\t"+e.getRef()+"\t"+e.getAlt()+"\t"+e.getQual()+"\t"+e.getFilter()+"\t"+e.getInfo()+"\n");
 				}
 			}
 		}
