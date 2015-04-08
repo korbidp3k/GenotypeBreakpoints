@@ -9,7 +9,7 @@ public class Event {
 	private EVENT_TYPE type;
 	private GenomicNode[] myNodes;
 	private String additionalInformation;
-	private GenomicCoordinate Coord;
+	private GenomicCoordinate coord;
 	private String id;
 	private String ref;
 	private String alt;
@@ -43,6 +43,7 @@ public class Event {
 			this.c1 = c2;
 			this.c2 = c1;
 		}
+		this.coord = c1;
 		this.type = type;
 		myNodes = new GenomicNode[2];
 		this.id=id;
@@ -421,11 +422,11 @@ public class Event {
 	}
 
 	public GenomicCoordinate getCoord() {
-		return Coord;
+		return coord;
 	}
 
-	public void setCoord(GenomicCoordinate coord) {
-		Coord = coord;
+	public void setCoord(GenomicCoordinate newCoord) {
+		coord = newCoord;
 	}
 
 }

@@ -1105,8 +1105,7 @@ public class Genotyper {
 							if(readDepth > mean-interval){
 								deleteEvents.add(e);
 								skipEvents.add(e);
-								//e.setId(e.getId());
-								e.setId("DEL_XXX + " + readDepth );
+								e.setId(e.getId());
 								e.setAlt("<DEL>");
 								e.setFilter(e.getFilter());
 								e.setQual(e.getQual());
@@ -1123,7 +1122,7 @@ public class Genotyper {
 							if(readDepth < mean+interval){
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
 								deleteEvents.add(e);
-								e.setId("TAN_XXX + " + readDepth );
+								e.setId(e.getId());
 								e.setAlt("<DEL>");
 								e.setFilter(e.getFilter());
 								e.setQual(e.getQual());
