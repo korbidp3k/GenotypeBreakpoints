@@ -27,6 +27,7 @@ public class Event {
 		}
 		this.type = type;
 		myNodes = new GenomicNode[2];
+		this.info="";
 	}
 	
 	public Event(GenomicCoordinate c1, GenomicCoordinate c2, EVENT_TYPE type, String additionalInformation){

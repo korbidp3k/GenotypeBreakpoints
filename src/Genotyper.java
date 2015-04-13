@@ -530,6 +530,7 @@ public class Genotyper {
 			System.exit(0);
 		}
 		
+		SAMFileReader.setDefaultValidationStringency(ValidationStringency.LENIENT);
 		SAMFileReader  samReader=new  SAMFileReader(new  File(args[1]));
 		
 		/*
@@ -577,8 +578,8 @@ public class Genotyper {
 		
 		/*VCF Header*/
 		//PrintWriter writer = new PrintWriter("/Users/schroeder/Downloads/VCF.txt", "UTF-8");
-		//PrintWriter writer = new PrintWriter("/home/adrianto/Downloads/VCF.txt", "UTF-8");
-		PrintWriter writer = new PrintWriter("/home/users/allstaff/schroeder/tools/GenotypeBreakpoints/VCF.txt", "UTF-8");
+		PrintWriter writer = new PrintWriter("/home/adrianto/Downloads/VCF.txt", "UTF-8");
+		//PrintWriter writer = new PrintWriter("/home/users/allstaff/schroeder/tools/GenotypeBreakpoints/VCF.txt", "UTF-8");
 		createVCFHeader(writer);
 		
 		/*
@@ -676,17 +677,18 @@ public class Genotyper {
 									newComplexEvent.setQual(e1.getQual());
 									tempInfo = e1.getInfo();
 									//System.out.println(tempInfo+"\n");
-									tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-									tmpNew = newComplexEvent.getAlt();
-									tempInfo=tempInfo.replace(tmpOld, tmpNew);
-									tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-									tmpNew = invend.getChr();
-									tempInfo=tempInfo.replace(tmpOld, tmpNew);
-									tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-									tmpNew = Integer.toString(invend.getPos());
-									tempInfo.replace(tmpOld, tmpNew);
-									//System.out.println(tempInfo+"\n"); 
-									newComplexEvent.setInfo(tempInfo);
+									if (tempInfo.contains("SVTYPE")){
+										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+										tmpNew = newComplexEvent.getAlt();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+										tmpNew = invend.getChr();
+										tempInfo=tempInfo.replace(tmpOld, tmpNew);
+										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+										tmpNew = Integer.toString(invend.getPos());
+										tempInfo.replace(tmpOld, tmpNew);
+										newComplexEvent.setInfo(tempInfo);
+									}
 									//writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									//currentNode?
 									//System.out.println(currentNode.getStart().toString());
@@ -710,17 +712,18 @@ public class Genotyper {
 											 newComplexEvent.setQual(e1.getQual());
 											 tempInfo = e1.getInfo();
 											 //System.out.println(tempInfo+"\n");
-											 tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-											 tmpNew = newComplexEvent.getAlt();
-											 tempInfo=tempInfo.replace(tmpOld, tmpNew);
-											 tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-											 tmpNew = invend.getChr();
-											 tempInfo=tempInfo.replace(tmpOld, tmpNew);
-											 tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-											 tmpNew = Integer.toString(invend.getPos());
-											 tempInfo.replace(tmpOld, tmpNew);
-											 //System.out.println(tempInfo+"\n"); 
-											 newComplexEvent.setInfo(tempInfo);
+											 if (tempInfo.contains("SVTYPE")){
+												 tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+												 tmpNew = newComplexEvent.getAlt();
+												 tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												 tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+												 tmpNew = invend.getChr();
+												 tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												 tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+												 tmpNew = Integer.toString(invend.getPos());
+												 tempInfo.replace(tmpOld, tmpNew);
+												 newComplexEvent.setInfo(tempInfo);
+											 }
 											 //writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 										} else {
 											//System.out.println("INVDUP!"+e1+e2);
@@ -736,18 +739,19 @@ public class Genotyper {
 											newComplexEvent.setFilter(e1.getFilter());
 											newComplexEvent.setQual(e1.getQual());
 											tempInfo = e1.getInfo();
-											 //System.out.println(tempInfo+"\n");
-											tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-											tmpNew = newComplexEvent.getAlt();
-											tempInfo=tempInfo.replace(tmpOld, tmpNew);
-											tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-											tmpNew = invend.getChr();
-											tempInfo=tempInfo.replace(tmpOld, tmpNew);
-											tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-											tmpNew = Integer.toString(invend.getPos());
-											tempInfo.replace(tmpOld, tmpNew);
-											//System.out.println(tempInfo+"\n"); 
-											newComplexEvent.setInfo(tempInfo);
+											//System.out.println(tempInfo+"\n");
+											if (tempInfo.contains("SVTYPE")){
+												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+												tmpNew = newComplexEvent.getAlt();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+												tmpNew = invend.getChr();
+												tempInfo=tempInfo.replace(tmpOld, tmpNew);
+												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+												tmpNew = Integer.toString(invend.getPos());
+												tempInfo.replace(tmpOld, tmpNew);
+												newComplexEvent.setInfo(tempInfo);
+											}
 											//writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 										}
 									}
@@ -790,17 +794,18 @@ public class Genotyper {
 												newComplexEvent.setQual(e1.getQual());
 												tempInfo = e1.getInfo();
 												//System.out.println(tempInfo+"\n");
-												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-												tmpNew = newComplexEvent.getAlt();
-												tempInfo=tempInfo.replace(tmpOld, tmpNew);
-												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-												tmpNew = tranend.getChr();
-												tempInfo=tempInfo.replace(tmpOld, tmpNew);
-												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-												tmpNew = Integer.toString(tranend.getPos());
-												tempInfo.replace(tmpOld, tmpNew);
-												//System.out.println(tempInfo+"\n"); 
-												newComplexEvent.setInfo(tempInfo);
+												if (tempInfo.contains("SVTYPE")){
+													tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+													tmpNew = newComplexEvent.getAlt();
+													tempInfo=tempInfo.replace(tmpOld, tmpNew);
+													tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+													tmpNew = tranend.getChr();
+													tempInfo=tempInfo.replace(tmpOld, tmpNew);
+													tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+													tmpNew = Integer.toString(tranend.getPos());
+													tempInfo.replace(tmpOld, tmpNew);
+													newComplexEvent.setInfo(tempInfo);
+												}
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											} else {
 												//area under e3 is translocated
@@ -822,18 +827,19 @@ public class Genotyper {
 												newComplexEvent.setFilter(e1.getFilter());
 												newComplexEvent.setQual(e1.getQual());
 												tempInfo = e1.getInfo();
-												 //System.out.println(tempInfo+"\n");
-												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-												tmpNew = newComplexEvent.getAlt();
-												tempInfo=tempInfo.replace(tmpOld, tmpNew);
-												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-												tmpNew = tranend.getChr();
-												tempInfo=tempInfo.replace(tmpOld, tmpNew);
-												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-												tmpNew = Integer.toString(tranend.getPos());
-												tempInfo.replace(tmpOld, tmpNew);
-												//System.out.println(tempInfo+"\n"); 
-												newComplexEvent.setInfo(tempInfo);
+												//System.out.println(tempInfo+"\n");
+												if (tempInfo.contains("SVTYPE")){
+													tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+													tmpNew = newComplexEvent.getAlt();
+													tempInfo=tempInfo.replace(tmpOld, tmpNew);
+													tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+													tmpNew = tranend.getChr();
+													tempInfo=tempInfo.replace(tmpOld, tmpNew);
+													tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+													tmpNew = Integer.toString(tranend.getPos());
+													tempInfo.replace(tmpOld, tmpNew);
+													newComplexEvent.setInfo(tempInfo);
+												}
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											}
 										}
@@ -854,18 +860,19 @@ public class Genotyper {
 												newComplexEvent.setFilter(e1.getFilter());
 												newComplexEvent.setQual(e1.getQual());
 												tempInfo = e1.getInfo();
-												 //System.out.println(tempInfo+"\n");
-												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-												tmpNew = newComplexEvent.getAlt();
-												tempInfo=tempInfo.replace(tmpOld, tmpNew);
-												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-												tmpNew = dupend.getChr();
-												tempInfo=tempInfo.replace(tmpOld, tmpNew);
-												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-												tmpNew = Integer.toString(dupend.getPos());
-												tempInfo.replace(tmpOld, tmpNew);
-												//System.out.println(tempInfo+"\n"); 
-												newComplexEvent.setInfo(tempInfo);
+												//System.out.println(tempInfo+"\n");
+												if (tempInfo.contains("SVTYPE")){
+													tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+													tmpNew = newComplexEvent.getAlt();
+													tempInfo=tempInfo.replace(tmpOld, tmpNew);
+													tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+													tmpNew = dupend.getChr();
+													tempInfo=tempInfo.replace(tmpOld, tmpNew);
+													tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+													tmpNew = Integer.toString(dupend.getPos());
+													tempInfo.replace(tmpOld, tmpNew);
+													newComplexEvent.setInfo(tempInfo);
+												}
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											} else {
 												//duplication upstream of currentNode
@@ -881,18 +888,19 @@ public class Genotyper {
 												newComplexEvent.setFilter(e1.getFilter());
 												newComplexEvent.setQual(e1.getQual());
 												tempInfo = e1.getInfo();
-												 //System.out.println(tempInfo+"\n");
-												tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-												tmpNew = newComplexEvent.getAlt();
-												tempInfo=tempInfo.replace(tmpOld, tmpNew);
-												tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-												tmpNew = dupend.getChr();
-												tempInfo=tempInfo.replace(tmpOld, tmpNew);
-												tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-												tmpNew = Integer.toString(dupend.getPos());
-												tempInfo.replace(tmpOld, tmpNew);
-												//System.out.println(tempInfo+"\n"); 
-												newComplexEvent.setInfo(tempInfo);
+												//System.out.println(tempInfo+"\n");
+												if (tempInfo.contains("SVTYPE")){
+													tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+													tmpNew = newComplexEvent.getAlt();
+													tempInfo=tempInfo.replace(tmpOld, tmpNew);
+													tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+													tmpNew = dupend.getChr();
+													tempInfo=tempInfo.replace(tmpOld, tmpNew);
+													tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+													tmpNew = Integer.toString(dupend.getPos());
+													tempInfo.replace(tmpOld, tmpNew);
+													newComplexEvent.setInfo(tempInfo);
+												}
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											}
 											
@@ -933,17 +941,18 @@ public class Genotyper {
 										newComplexEvent.setQual(e1.getQual());
 										tempInfo = e1.getInfo();
 										//System.out.println(tempInfo+"\n");
-										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-										tmpNew = newComplexEvent.getAlt();
-										tempInfo=tempInfo.replace(tmpOld, tmpNew);
-										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-										tmpNew = eventEnd.getChr();
-										tempInfo=tempInfo.replace(tmpOld, tmpNew);
-										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-										tmpNew = Integer.toString(eventEnd.getPos());
-										tempInfo.replace(tmpOld, tmpNew);
-										//System.out.println(tempInfo+"\n"); 
-										newComplexEvent.setInfo(tempInfo);
+										if (tempInfo.contains("SVTYPE")){
+											tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+											tmpNew = newComplexEvent.getAlt();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+											tmpNew = eventEnd.getChr();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+											tmpNew = Integer.toString(eventEnd.getPos());
+											tempInfo.replace(tmpOld, tmpNew);
+											newComplexEvent.setInfo(tempInfo);
+										}
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									} else {
 										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
@@ -956,17 +965,18 @@ public class Genotyper {
 										newComplexEvent.setQual(e1.getQual());
 										tempInfo = e1.getInfo();
 										//System.out.println(tempInfo+"\n");
-										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-										tmpNew = newComplexEvent.getAlt();
-										tempInfo=tempInfo.replace(tmpOld, tmpNew);
-										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-										tmpNew = eventEnd.getChr();
-										tempInfo=tempInfo.replace(tmpOld, tmpNew);
-										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-										tmpNew = Integer.toString(eventEnd.getPos());
-										tempInfo.replace(tmpOld, tmpNew);
-										//System.out.println(tempInfo+"\n"); 
-										newComplexEvent.setInfo(tempInfo);
+										if (tempInfo.contains("SVTYPE")){
+											tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+											tmpNew = newComplexEvent.getAlt();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+											tmpNew = eventEnd.getChr();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+											tmpNew = Integer.toString(eventEnd.getPos());
+											tempInfo.replace(tmpOld, tmpNew);
+											newComplexEvent.setInfo(tempInfo);
+										}
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									}
 								}
@@ -994,17 +1004,18 @@ public class Genotyper {
 										newComplexEvent.setQual(e1.getQual());
 										tempInfo = e1.getInfo();
 										//System.out.println(tempInfo+"\n");
-										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-										tmpNew = newComplexEvent.getAlt();
-										tempInfo=tempInfo.replace(tmpOld, tmpNew);
-										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-										tmpNew = eventEnd.getChr();
-										tempInfo=tempInfo.replace(tmpOld, tmpNew);
-										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-										tmpNew = Integer.toString(eventEnd.getPos());
-										tempInfo.replace(tmpOld, tmpNew);
-										//System.out.println(tempInfo+"\n"); 
-										newComplexEvent.setInfo(tempInfo);
+										if (tempInfo.contains("SVTYPE")){
+											tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+											tmpNew = newComplexEvent.getAlt();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+											tmpNew = eventEnd.getChr();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+											tmpNew = Integer.toString(eventEnd.getPos());
+											tempInfo.replace(tmpOld, tmpNew);
+											newComplexEvent.setInfo(tempInfo);
+										}
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									} else {
 										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
@@ -1017,17 +1028,18 @@ public class Genotyper {
 										newComplexEvent.setQual(e1.getQual());
 										tempInfo = e1.getInfo();
 										//System.out.println(tempInfo+"\n");
-										tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
-										tmpNew = newComplexEvent.getAlt();
-										tempInfo=tempInfo.replace(tmpOld, tmpNew);
-										tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
-										tmpNew = eventEnd.getChr();
-										tempInfo=tempInfo.replace(tmpOld, tmpNew);
-										tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
-										tmpNew = Integer.toString(eventEnd.getPos());
-										tempInfo.replace(tmpOld, tmpNew);
-										//System.out.println(tempInfo+"\n"); 
-										newComplexEvent.setInfo(tempInfo);
+										if (tempInfo.contains("SVTYPE")){
+											tmpOld = tempInfo.substring(tempInfo.indexOf("SVTYPE=")+7, tempInfo.indexOf("SVTYPE=")+10);
+											tmpNew = newComplexEvent.getAlt();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf("CHR2=")+5, tempInfo.indexOf(";",tempInfo.indexOf("CHR2=")));
+											tmpNew = eventEnd.getChr();
+											tempInfo=tempInfo.replace(tmpOld, tmpNew);
+											tmpOld = tempInfo.substring(tempInfo.indexOf(";END=")+5, tempInfo.indexOf(";CT",tempInfo.indexOf(";END=")));
+											tmpNew = Integer.toString(eventEnd.getPos());
+											tempInfo.replace(tmpOld, tmpNew);
+											newComplexEvent.setInfo(tempInfo);
+										}
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									}
 								}
@@ -1094,7 +1106,7 @@ public class Genotyper {
 								e2.setAlt("<INV>");
 								e2.setFilter(e2.getFilter());
 								e2.setQual(e2.getQual());
-								e2.setInfo("aAaAa_INV_aAaAa");
+								e2.setInfo(e2.getInfo());
 							}
 							else 
 								continue;
@@ -1124,7 +1136,7 @@ public class Genotyper {
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
 								deleteEvents.add(e);
 								e.setId(e.getId());
-								e.setAlt("<DEL>");
+								e.setAlt("<TAN>");
 								e.setFilter(e.getFilter());
 								e.setQual(e.getQual());
 								e.setInfo(e.getInfo());
