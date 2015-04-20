@@ -89,6 +89,46 @@ public class Event {
 		return new Event(c1, c2, type);
 	}
 	/*
+	 * Static function to handle the particularities of Socrates output, and convert it into a general
+	 * purpose Event.
+	 */
+	public static Event createNewEventFromSocratesOutputLatest(String output, int count){
+		String line = output.replace("\t\t", "\tX\t");
+		StringTokenizer t = new StringTokenizer(line);
+		String chr1 = t.nextToken(":");
+		int p1 = Integer.parseInt(t.nextToken(":\t"));
+		String o1 = t.nextToken("\t");
+		t.nextToken("\t");
+		String chr2 = t.nextToken("\t:");
+		int p2 = Integer.parseInt(t.nextToken("\t:"));
+		String o2 = t.nextToken("\t");
+		
+		String id="SOC"+Integer.toString(count);
+		String ref=".";
+		String alt=".";
+		String qual=".";
+		String filter="";
+		String info="";
+		
+		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
+		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
+		EVENT_TYPE type = classifySocratesBreakpoint(c1, o1, c2, o2);
+		
+		//look for additional information at the end of the call
+		int i = 0;
+		while(i<19 && t.hasMoreTokens()){
+      i++;
+			t.nextToken();
+		}
+		String additionalComments = (t.hasMoreTokens()? t.nextToken() : "");
+		if(additionalComments.startsWith("Inserted sequence")){
+			String insert = additionalComments.substring("Inserted sequence: ".length());
+			return new Event(c1, c2, type, insert);
+		}
+		
+		return new Event(c1, c2, type, id, ref, alt, qual, filter, info);
+	}
+	/*
 	 * Function to classify a line of Socrates output into a genomic event type.
 	 * The distinctions between INV1/2 etc are arbitrary, and have to be consistent across all the inputs.
 	 */

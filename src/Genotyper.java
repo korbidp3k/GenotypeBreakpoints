@@ -559,16 +559,18 @@ public class Genotyper {
 		
 		BufferedReader input = new BufferedReader(new FileReader(args[0]));
 		String line;
+		int count = 0;
 		while ((line = input.readLine()) != null){
 			//TODO: make # check algorithm specific?
 			if(line.startsWith("#"))
 				continue;
 			Event e;
 			switch(algorithm){
-			case SOCRATES: 	e = Event.createNewEventFromSocratesOutput(line); 	break;
+			//case SOCRATES: 	e = Event.createNewEventFromSocratesOutput(line); 	break;
+			case SOCRATES: 	e = Event.createNewEventFromSocratesOutputLatest(line, count++); 	break;
 			case DELLY: 	e = Event.createNewEventFromDellyOutputLatest(line);break;
 			case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
-			case GUSTAF: e = Event.createNewEventFromGustafOutput(line);	  if(e.size()<50) continue; break;
+			case GUSTAF: 	e = Event.createNewEventFromGustafOutput(line);	  if(e.size()<50) continue; break;
 			default:		e = null;
 			}
 			allEvents.add(e);
