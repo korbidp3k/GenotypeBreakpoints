@@ -105,10 +105,8 @@ public class Event {
 		
 		String id="SOC"+Integer.toString(count);
 		String ref=".";
-		String alt=".";
 		String qual=".";
 		String filter="";
-		String info="";
 		
 		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
 		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
@@ -126,6 +124,9 @@ public class Event {
 			return new Event(c1, c2, type, insert);
 		}
 		
+		String alt=altVCF(type);
+		String info="SVTYPE="+alt.substring(1, 4)+"; CHR2="+chr2+"; END="+p2;
+				
 		return new Event(c1, c2, type, id, ref, alt, qual, filter, info);
 	}
 	/*
@@ -284,10 +285,8 @@ public class Event {
 		
 		String id="CRT"+Integer.toString(count);
 		String ref=".";
-		String alt=".";
 		String qual=".";
 		String filter="";
-		String info="";
 		
 		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
 		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
@@ -298,6 +297,10 @@ public class Event {
 		if(type == EVENT_TYPE.COMPLEX_INVERSION){
 			return new ComplexEvent(c1, c2, type, null, null);
 		}
+		
+		String alt=altVCF(type);
+		String info="SVTYPE="+alt.substring(1, 4)+"; CHR2="+chr2+"; END="+p2;
+		
 		return new Event(c1, c2, type, id, ref, alt, qual, filter, info);
 	}
 	
@@ -501,4 +504,41 @@ public class Event {
 		coord = newCoord;
 	}
 
+	public static String altVCF(EVENT_TYPE type){
+		if(type.equals(EVENT_TYPE.DEL)){
+			return "<DEL>";
+		} else if(type.equals(EVENT_TYPE.INS)){
+			return "<INS>";
+		} else if(type.equals(EVENT_TYPE.TAN)){
+			return "<DUP>";
+		} else if(type.equals(EVENT_TYPE.INV1)){
+			return "<INV>";
+		} else if(type.equals(EVENT_TYPE.INV2)){
+			return "<INV>";
+		} else if(type.equals(EVENT_TYPE.INVTX1)){
+			return "<INV>";
+		} else if(type.equals(EVENT_TYPE.INVTX2)){
+			return "<INV>";
+		} else if(type.equals(EVENT_TYPE.ITX1)){
+			return "<TRA>";
+		} else if(type.equals(EVENT_TYPE.ITX2)){
+			return "<TRA>";
+		} else if(type.equals(EVENT_TYPE.COMPLEX_DUPLICATION)){
+			return "<DUP>";
+		} else if(type.equals(EVENT_TYPE.COMPLEX_INVERTED_TRANSLOCATION)){
+			return "<CVT>";
+		} else if(type.equals(EVENT_TYPE.COMPLEX_INVERTED_DUPLICATION)){
+			return "<CVD>";
+		} else if(type.equals(EVENT_TYPE.COMPLEX_TRANSLOCATION)){
+			return "<TRA>";
+		} else if(type.equals(EVENT_TYPE.COMPLEX_INVERSION)){
+			return "<CIV>";
+		} else if(type.equals(EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_TRANSLOCATION)){
+			return "<IVT>";
+		} else if(type.equals(EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION)){
+			return "<IVD>";
+		} else {
+			return "<XXX>";
+		} 
+	}
 }
