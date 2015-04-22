@@ -270,6 +270,37 @@ public class Event {
 		}
 		return new Event(c1, c2, type);
 	}
+	
+	public static Event createNewEventFromCrestOutputLatest(String output, int count) {
+		StringTokenizer t = new StringTokenizer(output, "\t");
+		
+		String chr1 = t.nextToken();
+		int p1 = Integer.parseInt(t.nextToken());
+		String o1 = t.nextToken();
+		t.nextToken();
+		String chr2 = t.nextToken();
+		int p2 = Integer.parseInt(t.nextToken());
+		String o2 = t.nextToken();
+		
+		String id="CRT"+Integer.toString(count);
+		String ref=".";
+		String alt=".";
+		String qual=".";
+		String filter="";
+		String info="";
+		
+		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
+		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
+		
+		t.nextToken();
+		EVENT_TYPE type = classifyCrestBreakpoint(t.nextToken(), chr1, chr2, o1, o2);
+		
+		if(type == EVENT_TYPE.COMPLEX_INVERSION){
+			return new ComplexEvent(c1, c2, type, null, null);
+		}
+		return new Event(c1, c2, type, id, ref, alt, qual, filter, info);
+	}
+	
 	private static EVENT_TYPE classifyCrestBreakpoint(String t, String c1, String c2, String o1, String o2){
 		if(t.equals("DEL")){
 			return EVENT_TYPE.DEL;

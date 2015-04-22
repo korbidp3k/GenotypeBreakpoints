@@ -569,7 +569,8 @@ public class Genotyper {
 			//case SOCRATES: 	e = Event.createNewEventFromSocratesOutput(line); 	break;
 			case SOCRATES: 	e = Event.createNewEventFromSocratesOutputLatest(line, count++); 	break;
 			case DELLY: 	e = Event.createNewEventFromDellyOutputLatest(line);break;
-			case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
+			//case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
+			case CREST:		e = Event.createNewEventFromCrestOutputLatest(line, count++); 		break;
 			case GUSTAF: 	e = Event.createNewEventFromGustafOutput(line);	  if(e.size()<50) continue; break;
 			default:		e = null;
 			}
@@ -1190,12 +1191,16 @@ public class Genotyper {
 	
 		//graphVisualisation("data/simul_ecoli_graph.gv", genomicNodes);
 		
+		count=0;
 		//reportEventComposition(genomicNodes);
 		/*VCF Output*/
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
 			for(GenomicNode currentNode: tableEntry.getValue()){
 				for(Event e: currentNode.getEvents()){
-					writer.write(e.getCoord().getChr()+"\t"+e.getCoord().getPos()+"\t"+e.getId()+"\t"+e.getRef()+"\t"+e.getAlt()+"\t"+e.getQual()+"\t"+e.getFilter()+"\t"+e.getInfo()+"\n");
+					try{
+						writer.write(e.getCoord().getChr()+"\t"+e.getCoord().getPos()+"\t"+e.getId()+"\t"+e.getRef()+"\t"+e.getAlt()+"\t"+e.getQual()+"\t"+e.getFilter()+"\t"+e.getInfo()+"\n");
+					} catch (NullPointerException npe) {
+					}
 				}
 			}
 		}
