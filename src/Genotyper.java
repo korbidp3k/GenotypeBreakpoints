@@ -523,10 +523,9 @@ public class Genotyper {
 		//Start Time
 		long startTime = System.nanoTime();
 	
-
-		if(args.length < 5){
+		if(args.length < 6){
 			//System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
-			System.err.println("Usage: <list of breakpoints> <BAM file> <algorithm (Socrates/Delly/Crest/Gustaf)> <mean coverage> <coverage std>");
+			System.err.println("Usage: <list of breakpoints> <BAM file> <algorithm (Socrates/Delly/Crest/Gustaf)> <mean coverage> <coverage std> <VCF file>");
 			System.exit(0);
 		}
 		
@@ -581,8 +580,10 @@ public class Genotyper {
 		
 		/*VCF Header*/
 		//PrintWriter writer = new PrintWriter("/Users/schroeder/Downloads/VCF.txt", "UTF-8");
-		PrintWriter writer = new PrintWriter("/home/adrianto/Downloads/VCF.txt", "UTF-8");
+		//PrintWriter writer = new PrintWriter("/home/adrianto/Downloads/VCF.txt", "UTF-8");
 		//PrintWriter writer = new PrintWriter("/home/users/allstaff/schroeder/tools/GenotypeBreakpoints/VCF.txt", "UTF-8");
+		
+		PrintWriter writer = new PrintWriter(args[5].toString(), "UTF-8");
 		createVCFHeader(writer);
 		
 		/*
@@ -637,16 +638,14 @@ public class Genotyper {
 		//String goldStandard = "/home/users/allstaff/schroeder/GenotypeBreakpoints/data/ecoli/SV_list_2.txt";
 		
 		String goldStandard = null;
-		if(args.length > 5){
-			goldStandard = args[5];
+		if(args.length > 6){
+			goldStandard = args[6];
 		}
 		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
 		if(goldStandard != null)
 			compareToGoldStandard(goldStandard, genomicNodes, 150, false);
 		
 		String tempInfo = null;
-		String tmpOld=null;
-		String tmpNew=null;
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
 			for(GenomicNode currentNode: tableEntry.getValue()){
