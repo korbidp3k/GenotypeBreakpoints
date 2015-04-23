@@ -477,7 +477,7 @@ public class Genotyper {
         output.write("##INFO=<ID=PRECISE,Number=0,Type=Flag,Description=\"Precise structural variation\">\n");
         output.write("##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n");
         output.write("##INFO=<ID=SVMETHOD,Number=1,Type=String,Description=\"Type of approach used to detect SV\">\n");
-        output.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
+        output.write("##INFO=<ID=ADP,Number=1,Type=Integer,Description=\"Average Read Depth\">\n");
         
         //FILTER
         output.write("##FILTER=<ID=LowQual,Description=\"PE support below 3 or mapping quality below 20.\">\n");
@@ -691,7 +691,9 @@ public class Genotyper {
 //										tempInfo.replace(tmpOld, tmpNew);
 //										newComplexEvent.setInfo(tempInfo);
 //									}
-									tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos());
+									double readDepth = getReadDepth(samReader, invstart.getChr(), invstart.getPos(), invend.getPos());
+									//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos());
+									tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos())+"; ADP="+readDepth;
 									newComplexEvent.setInfo(tempInfo);
 																									
 									//writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
@@ -729,7 +731,9 @@ public class Genotyper {
 //												 tempInfo.replace(tmpOld, tmpNew);
 //												 newComplexEvent.setInfo(tempInfo);
 //											 }
-											 tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos());
+											 double readDepth = getReadDepth(samReader, invstart.getChr(), invstart.getPos(), invend.getPos());
+											 //tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos());
+											 tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos())+"; ADP="+readDepth;
 											 newComplexEvent.setInfo(tempInfo);
 											 //writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 										} else {
@@ -759,7 +763,9 @@ public class Genotyper {
 //												tempInfo.replace(tmpOld, tmpNew);
 //												newComplexEvent.setInfo(tempInfo);
 //											}
-											tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos());
+											double readDepth = getReadDepth(samReader, invstart.getChr(), invstart.getPos(), invend.getPos());
+											//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos());
+											tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos())+"; ADP="+readDepth;
 											newComplexEvent.setInfo(tempInfo);
 											//writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 										}
@@ -815,7 +821,9 @@ public class Genotyper {
 //													tempInfo.replace(tmpOld, tmpNew);
 //													newComplexEvent.setInfo(tempInfo);
 //												}
-												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos());
+												double readDepth = getReadDepth(samReader, transtart.getChr(), transtart.getPos(), tranend.getPos());
+												//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos());
+												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos())+"; ADP="+readDepth;
 												newComplexEvent.setInfo(tempInfo);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											} else {
@@ -851,7 +859,9 @@ public class Genotyper {
 //													tempInfo.replace(tmpOld, tmpNew);
 //													newComplexEvent.setInfo(tempInfo);
 //												}
-												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos());
+												double readDepth = getReadDepth(samReader, transtart.getChr(), transtart.getPos(), tranend.getPos());
+												//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos());
+												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos())+"; ADP="+readDepth;
 												newComplexEvent.setInfo(tempInfo);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											}
@@ -886,7 +896,9 @@ public class Genotyper {
 //													tempInfo.replace(tmpOld, tmpNew);
 //													newComplexEvent.setInfo(tempInfo);
 //												}
-												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos());
+												double readDepth = getReadDepth(samReader, dupstart.getChr(), dupstart.getPos(), dupend.getPos());
+												//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos());
+												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos())+"; ADP="+readDepth;
 												newComplexEvent.setInfo(tempInfo);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											} else {
@@ -916,7 +928,9 @@ public class Genotyper {
 //													tempInfo.replace(tmpOld, tmpNew);
 //													newComplexEvent.setInfo(tempInfo);
 //												}
-												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos());
+												double readDepth = getReadDepth(samReader, dupstart.getChr(), dupstart.getPos(), dupend.getPos());
+												//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos());
+												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos())+"; ADP="+readDepth;
 												newComplexEvent.setInfo(tempInfo);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											}
