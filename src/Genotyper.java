@@ -16,6 +16,8 @@ import java.util.StringTokenizer;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
+import net.sf.samtools.util.Tuple;
+
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
@@ -376,50 +378,7 @@ public class Genotyper {
 		System.out.println("Self refs: "+selfRef);
 	}
 	
-	private static int[] readMpileupFile(String filename, int chrlen) throws IOException{
-//		BufferedReader input = new BufferedReader(new FileReader(filename));
-//		String line;
-//		int[] counts = new int[chrlen];
-//		while( (line=input.readLine()) != null){
-//			StringTokenizer tokens = new StringTokenizer(line);
-//			tokens.nextToken();
-//			int pos = Integer.parseInt(tokens.nextToken());
-//			tokens.nextToken();
-//			int count = Integer.parseInt(tokens.nextToken());
-//			counts[pos-1] = count;
-//		}
-//		System.out.println("Done");
-//		input.close();
-//		return null;
-		//TabixReader reader = new TabixReader("data/simulated_ecoli_1_simseq_s.mpileup.gz");
-		TabixReader reader = new TabixReader("../../BAM/simulated_ecoli_1_simseq_s.mpileup.gz");
-		//TabixReader reader = new TabixReader("data/simulated_chr12_1_simseq_s.mpileup.gz");
-		TabixReader.Iterator iter = reader.query(0, 60002, 60010);
-		String line;
-		while( (line=iter.next()) != null){
-			System.out.println(line);
-		}
-		return null;
-	}
 	
-	private static double meanReadDepth(TabixReader reader, int start, int stop) throws IOException{
-		TabixReader.Iterator iter = reader.query(0, start-1, stop);
-		if(iter==null){
-			return -1;
-		}
-		int count = 0;
-		int sum = 0;
-		String line;
-		while( (line=iter.next()) != null){
-			StringTokenizer tokens = new StringTokenizer(line);
-			tokens.nextToken();
-			tokens.nextToken();
-			tokens.nextToken();
-			count++;
-			sum += Integer.parseInt(tokens.nextToken());
-		}
-		return (double)sum / count;
-	}
 	
 	//private static double getReadDepth(String str, String chr, int start, int end){
 	private static double getReadDepth(SAMFileReader samReader, String chr, int start, int end){
@@ -523,60 +482,88 @@ public class Genotyper {
 		//Start Time
 		long startTime = System.nanoTime();
 	
-		if(args.length < 6){
-			//System.err.println("Usage: <list of breakpoints> <tabix indexed mpileup track><BAM file><algorithm (Socrates/Delly)>");
-			System.err.println("Usage: <list of breakpoints> <BAM file> <algorithm (Socrates/Delly/Crest/Gustaf)> <mean coverage> <coverage std> <VCF file>");
+		if(args.length < 8){
+			System.err.println("Options (all mandatory -- input can be specified more than once):" +
+					"\n\t-i <list of breakpoints> <algorithm (Socrates/Delly/Crest/Gustaf)>\n\t-b <BAM file> \n\t-c <mean coverage> <coverage>");
 			System.exit(0);
 		}
 		
-		SAMFileReader.setDefaultValidationStringency(ValidationStringency.LENIENT);
-		SAMFileReader  samReader=new  SAMFileReader(new  File(args[1]));
-		
-		/*
-		 * parse the algorithm parameter from command line
-		 */	
-		SV_ALGORITHM algorithm = SV_ALGORITHM.SOCRATES;
-		
-		try{
-			algorithm = SV_ALGORITHM.valueOf(args[2].toUpperCase());
-			System.out.println("Interpreting input as "+algorithm+" breakpoints");
-		} catch (IllegalArgumentException e){
-			System.out.println("Unknown SV algorithm identifier.");
-			System.exit(1);
+		/*parse the options from the command line */
+		int argindex = 0;
+		ArrayList<Tuple<BufferedReader, SV_ALGORITHM>> inputs = new ArrayList<Tuple<BufferedReader,SV_ALGORITHM>>();
+		SAMFileReader  samReader = null;
+		double mean = 0;
+		double interval= 0;
+		String goldStandard = null;
+		while (argindex < args.length){
+			if (args[argindex].equals("-i")){
+				try{
+					BufferedReader input = new BufferedReader(new FileReader(args[argindex + 1]));
+					SV_ALGORITHM algorithm = SV_ALGORITHM.valueOf(args[argindex + 2].toUpperCase());
+					inputs.add(new Tuple<BufferedReader, Genotyper.SV_ALGORITHM>(input, algorithm));
+					argindex += 3;
+				} catch (IllegalArgumentException e){
+					System.err.println("Unable to parse input breakpoints.");
+					System.exit(1);
+				}
+			} else if (args[argindex].equals("-b")){
+				try {
+					samReader=new  SAMFileReader(new  File(args[argindex + 1]));
+					argindex += 2;
+				} catch (IllegalArgumentException e){
+					System.err.println("Unable to load bam file.");
+					System.exit(1);
+				}
+			} else if(args[argindex].equals("-c")){
+				try{
+					mean = Double.parseDouble(args[argindex + 1]);
+					interval = 2*Double.parseDouble(args[argindex + 2]);
+					argindex += 3;
+				} catch (IllegalArgumentException e){
+					System.err.println("Unable to parse coverage and std.");
+					System.exit(1);
+				}
+			} else if (args[argindex].equals("-d")){
+				goldStandard = args[argindex + 1];
+				argindex += 2;
+			}
+			
+			else {
+				System.err.println("Unknown option: "+args[argindex]);
+				throw new IllegalArgumentException();
+			}
 		}
-		
-		/*
-		 * Create tabix reader to see that the file works
-		 * Needed only after event genotyping
-		 */
 
-		//TabixReader reader = new TabixReader(args[1]); //reads mpileup track for copy number analysis
+		
 		/*
 		 * parse the entire input file and collect all events in list
 		 */
 		ArrayList<Event> allEvents = new ArrayList<Event>();
-		
-		BufferedReader input = new BufferedReader(new FileReader(args[0]));
+
 		String line;
 		int count = 0;
-		while ((line = input.readLine()) != null){
-			//TODO: make # check algorithm specific?
-			if(line.startsWith("#"))
-				continue;
-			Event e;
-			switch(algorithm){
-			//case SOCRATES: 	e = Event.createNewEventFromSocratesOutput(line); 	break;
-			case SOCRATES: 	e = Event.createNewEventFromSocratesOutputLatest(line, count++); 	break;
-			case DELLY: 	e = Event.createNewEventFromDellyOutputLatest(line);break;
-			//case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
-			case CREST:		e = Event.createNewEventFromCrestOutputLatest(line, count++); 		break;
-			case GUSTAF: 	e = Event.createNewEventFromGustafOutput(line);	  if(e.size()<50) continue; break;
-			default:		e = null;
+		
+		for(Tuple<BufferedReader, SV_ALGORITHM> input_tuple : inputs){
+			System.out.println("Reading input...");
+			BufferedReader input = input_tuple.a;
+			SV_ALGORITHM algorithm = input_tuple.b;
+			while ((line = input.readLine()) != null){
+				//TODO: make # check algorithm specific?
+				if(line.startsWith("#"))
+					continue;
+				Event e;
+				switch(algorithm){
+				case SOCRATES: 	e = Event.createNewEventFromSocratesOutput(line); 	break;
+				case DELLY: 	e = Event.createNewEventFromDellyOutputLatest(line);break;
+				case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
+				case GUSTAF: e = Event.createNewEventFromGustafOutput(line);	  if(e.size()<50) continue; break;
+				default:		e = null;
+				}
+				allEvents.add(e);
 			}
-			allEvents.add(e);
+			input.close();
 		}
 		System.out.println("Total events: "+allEvents.size());
-		input.close();
 		
 		/*VCF Header*/
 		//PrintWriter writer = new PrintWriter("/Users/schroeder/Downloads/VCF.txt", "UTF-8");
@@ -599,14 +586,14 @@ public class Genotyper {
 		}
 		
 		//establish distance for "close" events according to algorithm
-		int maxDistanceForNodeMerge = 0;
-		switch(algorithm){
-		case SOCRATES: 	maxDistanceForNodeMerge = 15; break;
-		case DELLY:		maxDistanceForNodeMerge = 100; break;
-		case CREST:		maxDistanceForNodeMerge = 15; break;
-		case GUSTAF:	maxDistanceForNodeMerge = 15; break;
-		default:		System.err.println("Node merge distance set to 0!");
-		}
+		int maxDistanceForNodeMerge = 100;
+//		switch(algorithm){
+//		case SOCRATES: 	maxDistanceForNodeMerge = 15; break;
+//		case DELLY:		maxDistanceForNodeMerge = 100; break;
+//		case CREST:		maxDistanceForNodeMerge = 15; break;
+//		case GUSTAF:	maxDistanceForNodeMerge = 15; break;
+//		default:		System.err.println("Node merge distance set to 0!");
+//		}
 		//static parameter to classify single inversions as FP or TP
 		final boolean classifySimpleInversion = false;
 		
@@ -637,10 +624,7 @@ public class Genotyper {
 		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
 		//String goldStandard = "/home/users/allstaff/schroeder/GenotypeBreakpoints/data/ecoli/SV_list_2.txt";
 		
-		String goldStandard = null;
-		if(args.length > 6){
-			goldStandard = args[6];
-		}
+
 		//compareToGoldStandard(goldStandard, genomicNodes, 150, true);
 		if(goldStandard != null)
 			compareToGoldStandard(goldStandard, genomicNodes, 150, false);
@@ -1115,8 +1099,6 @@ public class Genotyper {
 		//while we're at it: let's run through the nodes again!
 		//this time for output
 		int totalEvents = 0;
-		final double mean = Double.parseDouble(args[3]);
-		final double interval = 2*Double.parseDouble(args[4]);
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
 			System.out.println("Working on Entry: "+tableEntry.toString());
 			for(GenomicNode currentNode: tableEntry.getValue()){
