@@ -317,15 +317,29 @@ public class Event {
 			else 
 				return EVENT_TYPE.INV2;
 		} else if (t.equals("CTX")) {
+//			if(o1.equals(o2)) {
+//				if(o1.equals("+"))
+//					return EVENT_TYPE.INVTX1;
+//				else
+//					return EVENT_TYPE.INVTX2;
+//			} else if(o1.equals("+") &&  c1.compareTo(c2) < 0 || o1.equals("-") && c1.compareTo(c2) >= 0){
+//				return EVENT_TYPE.ITX1;
+//			} else {
+//				return EVENT_TYPE.ITX2;
+//			}
 			if(o1.equals(o2)) {
-				if(o1.equals("+"))
-					return EVENT_TYPE.INVTX1;
+				if(o1.equals("+")) {
+					if(c1.compareTo(c2) < 0)
+						return EVENT_TYPE.ITX1;
+					else
+						return EVENT_TYPE.ITX2;
+				}
 				else
-					return EVENT_TYPE.INVTX2;
+					return EVENT_TYPE.XXX;
 			} else if(o1.equals("+") &&  c1.compareTo(c2) < 0 || o1.equals("-") && c1.compareTo(c2) >= 0){
-				return EVENT_TYPE.ITX1;
+				return EVENT_TYPE.INVTX2;
 			} else {
-				return EVENT_TYPE.ITX2;
+				return EVENT_TYPE.INVTX1;
 			}
 		} else {
 			return EVENT_TYPE.XXX;

@@ -242,7 +242,7 @@ public class Genotyper {
 				continue;
 			}
 			if(e==null){
-				System.out.println("DEFINITE FN: "+goldLine);
+				//System.out.println("DEFINITE FN: "+goldLine);
 				goldLine = gold.readLine();
 				continue;
 			} 
@@ -586,7 +586,7 @@ public class Genotyper {
 		}
 		
 		//establish distance for "close" events according to algorithm
-		int maxDistanceForNodeMerge = 100;
+		int maxDistanceForNodeMerge = 15;
 //		switch(algorithm){
 //		case SOCRATES: 	maxDistanceForNodeMerge = 15; break;
 //		case DELLY:		maxDistanceForNodeMerge = 100; break;
@@ -601,23 +601,33 @@ public class Genotyper {
 		//also checks each node for redundant members
 		//TODO: handle redundant members
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
-			GenomicNode lastNode = null, currentNode = null;
-			Iterator<GenomicNode> iterator = tableEntry.getValue().iterator();
 			int nodesMerged = 0;
-			while(iterator.hasNext()){
-				currentNode = iterator.next();
-				if(lastNode != null && currentNode.getStart().distanceTo(lastNode.getEnd()) < maxDistanceForNodeMerge){
-					lastNode.mergeWithNode(currentNode);
-					iterator.remove();
+			GenomicNode[] staticList = new GenomicNode[tableEntry.getValue().size()];
+			tableEntry.getValue().toArray(staticList);
+			if(staticList.length == 0)
+				break;
+			GenomicNode lastNode = staticList[0], currentNode = null;
+			for(int i = 1; i < staticList.length; i++){
+				currentNode = staticList[i];
+				if(currentNode.getStart().distanceTo(lastNode.getEnd()) < maxDistanceForNodeMerge){
+//					System.out.println("Merging Node at "+lastNode.getStart()+" with node at "+currentNode.getStart());
+//					for(Event e:lastNode.getEvents()){
+//						System.out.println(e);
+//					}
+//					System.out.println("----");
+//					for(Event e:currentNode.getEvents()){
+//						System.out.println(e);
+//					}
+					lastNode.mergeWithNode(currentNode);	
+					if(!tableEntry.getValue().remove(currentNode))
+						System.out.println("NO CAN DO");
 					nodesMerged++;
 				} else {
-					if(lastNode != null)
-						lastNode.checkForRedundantEvents();
+					lastNode.checkForRedundantEvents(maxDistanceForNodeMerge);
 					lastNode = currentNode;
 				}
 			}
-			if(lastNode != null)
-				lastNode.checkForRedundantEvents();
+			lastNode.checkForRedundantEvents(maxDistanceForNodeMerge);
 			System.out.println("Nodes Merged: "+nodesMerged);
 		}
 		
@@ -632,6 +642,7 @@ public class Genotyper {
 		String tempInfo = null;
 		//iterate through node sets again, and genotype events
 		for(Entry<String, TreeSet<GenomicNode>> tableEntry: genomicNodes.entrySet()) {
+			System.out.println("Nodes on chr:"+tableEntry.getValue().size());
 			for(GenomicNode currentNode: tableEntry.getValue()){
 				//iterate through all event-event pairing in this node and assess for complex events
 				Event e1, e2;
