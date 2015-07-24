@@ -248,6 +248,26 @@ public class Event {
 		return null;
 	}
 	
+	public static Event createNewEventFromBEDPE (String output){
+		String[] bits = output.split("\t");
+		String chr1 = bits[0];
+		int p1 = Integer.parseInt(bits[1]);
+		String chr2 = bits[3];
+		int p2 = Integer.parseInt(bits[4]);
+		String o1 = bits[8];
+		String o2 = bits[9];
+		String qual=bits[7];
+		String id=bits[6];
+		String ref="";
+		String alt="";
+		String info=bits[10];
+		String filter = "";
+		GenomicCoordinate c1 = new GenomicCoordinate(chr1, p1);
+		GenomicCoordinate c2 = new GenomicCoordinate(chr2, p2);
+		EVENT_TYPE type = classifySocratesBreakpoint(c1, o1, c2, o2);
+		return new Event(c1, c2, type, id, ref, alt, qual, filter, info);
+	}
+	
 	
 	public static Event createNewEventFromCrestOutput(String output) {
 		StringTokenizer t = new StringTokenizer(output, "\t");

@@ -16,7 +16,7 @@ import java.util.StringTokenizer;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-import net.sf.samtools.util.Tuple;
+import htsjdk.samtools.util.Tuple;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.Interval;
@@ -470,7 +470,7 @@ public class Genotyper {
         output.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\n");
 	}
 	
-	enum SV_ALGORITHM {SOCRATES, DELLY, CREST, GUSTAF};
+	enum SV_ALGORITHM {SOCRATES, DELLY, CREST, GUSTAF, BEDPE};
 	
 	
 	static ArrayList<String> oldFns = new ArrayList<String>();
@@ -484,7 +484,7 @@ public class Genotyper {
 	
 		if(args.length < 8){
 			System.err.println("Options (all mandatory -- input can be specified more than once):" +
-					"\n\t-i <list of breakpoints> <algorithm (Socrates/Delly/Crest/Gustaf)>\n\t-b <BAM file> \n\t-c <mean coverage> <coverage>");
+					"\n\t-i <list of breakpoints> <algorithm (Socrates/Delly/Crest/Gustaf/BEDPE)>\n\t-b <BAM file> \n\t-c <mean coverage> <coverage>");
 			System.exit(0);
 		}
 		
@@ -557,6 +557,7 @@ public class Genotyper {
 				case DELLY: 	e = Event.createNewEventFromDellyOutputLatest(line);break;
 				case CREST:		e = Event.createNewEventFromCrestOutput(line); 		break;
 				case GUSTAF: e = Event.createNewEventFromGustafOutput(line);	  if(e.size()<50) continue; break;
+				case BEDPE: 	e = Event.createNewEventFromBEDPE(line); break;
 				default:		e = null;
 				}
 				allEvents.add(e);
