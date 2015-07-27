@@ -571,7 +571,7 @@ public class Genotyper {
 		//PrintWriter writer = new PrintWriter("/home/adrianto/Downloads/VCF.txt", "UTF-8");
 		//PrintWriter writer = new PrintWriter("/home/users/allstaff/schroeder/tools/GenotypeBreakpoints/VCF.txt", "UTF-8");
 		
-		PrintWriter writer = new PrintWriter(args[5].toString(), "UTF-8");
+		PrintWriter writer = new PrintWriter("CLOVE.vcf", "UTF-8");
 		createVCFHeader(writer);
 		
 		/*
