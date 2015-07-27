@@ -382,7 +382,11 @@ public class Genotyper {
 	
 	//private static double getReadDepth(String str, String chr, int start, int end){
 	private static double getReadDepth(SAMFileReader samReader, String chr, int start, int end){
-	
+		
+		if(start >= end){
+			return -1;
+		}
+		
 		//SAMFileReader  samReader=new  SAMFileReader(new  File(str));
         String chromId=chr;
         int chromStart=start;
@@ -1148,7 +1152,7 @@ public class Genotyper {
 							//check for deletion
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
 							double readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos()+1, e.getC2().getPos()-1);
-							if(readDepth > mean-interval){
+							if(readDepth < 0 || readDepth > mean-interval){
 								deleteEvents.add(e);
 								skipEvents.add(e);
 								e.setId(e.getId());
@@ -1165,7 +1169,7 @@ public class Genotyper {
 							//double readDepth = meanReadDepth(reader, e.getC1().getPos()+1, e.getC2().getPos()-1);
 							readDepth = getReadDepth(samReader, e.getC1().getChr(), e.getC1().getPos(), e.getC2().getPos());
 //							//double flank = (meanReadDepth(reader, e.getC1().getPos()-200, e.getC1().getPos()) + meanReadDepth(reader, e.getC2().getPos(), e.getC2().getPos()+200))/2;
-							if(readDepth < mean+interval){
+							if( readDepth < 0 || readDepth < mean+interval){
 								//System.out.println("\t\t\t\t\t\tNot proper duplication!!");
 								deleteEvents.add(e);
 								e.setId(e.getId());
