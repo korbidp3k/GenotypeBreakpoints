@@ -488,7 +488,9 @@ public class Genotyper {
 	
 		if(args.length < 8){
 			System.err.println("Options (all mandatory -- input can be specified more than once):" +
-					"\n\t-i <list of breakpoints> <algorithm (Socrates/Delly/Crest/Gustaf/BEDPE)>\n\t-b <BAM file> \n\t-c <mean coverage> <coverage>");
+					"\n\t-i <list of breakpoints> <algorithm (Socrates/Delly/Crest/Gustaf/BEDPE)>" +
+					"\n\t-b <BAM file> \n\t-c <mean coverage> <coverage>" +
+					"\n\t-o <output filename> [default: CLOVE.vcf]");
 			System.exit(0);
 		}
 		
@@ -499,6 +501,7 @@ public class Genotyper {
 		double mean = 0;
 		double interval= 0;
 		String goldStandard = null;
+		String outputVCF = "CLOVE.vcf";
 		while (argindex < args.length){
 			if (args[argindex].equals("-i")){
 				try{
@@ -529,6 +532,9 @@ public class Genotyper {
 				}
 			} else if (args[argindex].equals("-d")){
 				goldStandard = args[argindex + 1];
+				argindex += 2;
+			} else if(args[argindex].equals("-o")){
+				outputVCF = args[argindex + 1];
 				argindex += 2;
 			}
 			
@@ -575,7 +581,7 @@ public class Genotyper {
 		//PrintWriter writer = new PrintWriter("/home/adrianto/Downloads/VCF.txt", "UTF-8");
 		//PrintWriter writer = new PrintWriter("/home/users/allstaff/schroeder/tools/GenotypeBreakpoints/VCF.txt", "UTF-8");
 		
-		PrintWriter writer = new PrintWriter("CLOVE.vcf", "UTF-8");
+		PrintWriter writer = new PrintWriter(outputVCF, "UTF-8");
 		createVCFHeader(writer);
 		
 		/*
