@@ -77,7 +77,7 @@ public class Event {
 		//look for additional information at the end of the call
 		int i = 0;
 		while(i<19 && t.hasMoreTokens()){
-      i++;
+			i++;
 			t.nextToken();
 		}
 		String additionalComments = (t.hasMoreTokens()? t.nextToken() : "");
@@ -115,7 +115,7 @@ public class Event {
 		//look for additional information at the end of the call
 		int i = 0;
 		while(i<19 && t.hasMoreTokens()){
-      i++;
+			i++;
 			t.nextToken();
 		}
 		String additionalComments = (t.hasMoreTokens()? t.nextToken() : "");
@@ -580,5 +580,9 @@ public class Event {
 		} else {
 			return "<XXX>";
 		} 
+	}
+	
+	public String toVcf() {
+		return this.getCoord().getChr()+"\t"+this.getCoord().getPos()+"\t"+this.getId()+"\t"+this.getRef()+"\t"+this.getAlt()+"\t"+this.getQual()+"\t"+this.getFilter()+"\t"+this.getInfo();
 	}
 }

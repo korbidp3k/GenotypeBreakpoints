@@ -16,6 +16,7 @@ import java.util.StringTokenizer;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
+
 import htsjdk.samtools.util.Tuple;
 
 import htsjdk.samtools.*;
@@ -88,6 +89,50 @@ class EventIterator implements Iterator<Event> {
 }
 
 public class Genotyper {
+	private static int softclipLength5prime(SAMRecord s){
+		int sc_start = s.getAlignmentStart() - s.getUnclippedStart();
+		return sc_start;
+	}
+	private static int softclipLength3prime(SAMRecord s){
+		int sc_end = s.getUnclippedEnd() - s.getAlignmentEnd();
+		return sc_end;
+	}
+	private static boolean isInteresingSoftclip(SAMRecord s, int start, int end, String orientation){
+		if(orientation.equals("+") && s.getAlignmentEnd() <= end + 2 && softclipLength5prime(s) > 4){
+			return true;
+		} 
+		if(orientation.equals("-") && s.getAlignmentStart() >= start -2 && softclipLength3prime(s) > 4) {
+			return true;
+		}
+//		if(s.getAlignmentStart()-2 <= breakpoint && s.getAlignmentEnd()+2>=breakpoint && (softclipLength3prime(s) > 4 || softclipLength5prime(s) > 4))
+//			return true;
+		return false;
+	}
+	private static boolean isAlignedAcrossBreakpoint(SAMRecord s, int breakpointPosition){
+		if(s.getAlignmentStart() < breakpointPosition-5 && s.getAlignmentEnd() > breakpointPosition+5 && s.getAlignmentStart() - s.getUnclippedStart() < 10 && s.getUnclippedEnd() - s.getAlignmentEnd() < 10)
+			return true;
+		return false;
+	}
+	private static double fetchStuff(
+			String chr, int start, int end, String orientation,  SAMFileReader bamFile) {
+		
+		SAMRecordIterator iter = bamFile.queryOverlapping(chr, start, end);
+		
+		int properAlignment = 0,  softclipped = 0;
+		
+		int breakpointPosition = (start + end)/2;
+		
+		for(SAMRecord s; iter.hasNext();){
+			s = iter.next();
+			if(isInteresingSoftclip(s, start, end, orientation)){
+				softclipped ++;
+			} else if (isAlignedAcrossBreakpoint(s, breakpointPosition)){
+				properAlignment++;
+			}
+		}
+		
+		return (double)softclipped/(softclipped+properAlignment);
+	}
 	
 	private static void addEventToNodeList(Event e, Hashtable<String, TreeSet<GenomicNode>> genomicNodes, boolean useFirstCoordinate){
 		GenomicCoordinate coordinate = (useFirstCoordinate? e.getC1() : e.getC2());
@@ -429,6 +474,7 @@ public class Genotyper {
         output.write("##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"PE confidence interval around END\">\n");
         output.write("##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"PE confidence interval around POS\">\n");
         output.write("##INFO=<ID=CHR2,Number=1,Type=String,Description=\"Chromosome for END coordinate in case of a translocation\">\n");
+        output.write("##INFO=<ID=START>,Number=1,Type=Integer,Description=\"Start position of the interval (for certain types only)\">\n");
         output.write("##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant\">\n");
         output.write("##INFO=<ID=PE,Number=1,Type=Integer,Description=\"Paired-end support of the structural variant\">\n");
         output.write("##INFO=<ID=MAPQ,Number=1,Type=Integer,Description=\"Median mapping quality of paired-ends\">\n");
@@ -1238,7 +1284,7 @@ public class Genotyper {
 			for(GenomicNode currentNode: tableEntry.getValue()){
 				for(Event e: currentNode.getEvents()){
 					try{
-						writer.write(e.getCoord().getChr()+"\t"+e.getCoord().getPos()+"\t"+e.getId()+"\t"+e.getRef()+"\t"+e.getAlt()+"\t"+e.getQual()+"\t"+e.getFilter()+"\t"+e.getInfo()+"\n");
+						writer.write(e.toVcf()+"\n");
 					} catch (NullPointerException npe) {
 					}
 				}
