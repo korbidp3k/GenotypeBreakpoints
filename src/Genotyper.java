@@ -817,8 +817,10 @@ public class Genotyper {
 //											}
 											double readDepth = getReadDepth(samReader, invstart.getChr(), invstart.getPos(), invend.getPos());
 											//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos());
-											tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos())+"; ADP="+readDepth;
+//											tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invend.getChr()+"; END="+Integer.toString(invend.getPos())+"; ADP="+readDepth;
+											tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+invstart.getChr()+"; START="+Integer.toString(invstart.getPos())+"; END="+Integer.toString(invend.getPos())+"; ADP="+readDepth;
 											newComplexEvent.setInfo(tempInfo);
+											newComplexEvent.setCoord(insert);
 											//writer.write(newComplexEvent.getC1().getChr()+"\t"+invstart+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 										}
 									}
@@ -875,8 +877,9 @@ public class Genotyper {
 //												}
 												double readDepth = getReadDepth(samReader, transtart.getChr(), transtart.getPos(), tranend.getPos());
 												//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos());
-												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos())+"; ADP="+readDepth;
+												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+transtart.getChr()+"; START="+Integer.toString(transtart.getPos())+"; END="+Integer.toString(tranend.getPos())+"; ADP="+readDepth;
 												newComplexEvent.setInfo(tempInfo);
+												newComplexEvent.setCoord(traninsert);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											} else {
 												//area under e3 is translocated
@@ -913,8 +916,9 @@ public class Genotyper {
 //												}
 												double readDepth = getReadDepth(samReader, transtart.getChr(), transtart.getPos(), tranend.getPos());
 												//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos());
-												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+tranend.getChr()+"; END="+Integer.toString(tranend.getPos())+"; ADP="+readDepth;
+												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+transtart.getChr()+"; START="+Integer.toString(transtart.getPos())+"; END="+Integer.toString(tranend.getPos())+"; ADP="+readDepth;
 												newComplexEvent.setInfo(tempInfo);
+												newComplexEvent.setCoord(traninsert);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											}
 										}
@@ -950,8 +954,9 @@ public class Genotyper {
 //												}
 												double readDepth = getReadDepth(samReader, dupstart.getChr(), dupstart.getPos(), dupend.getPos());
 												//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos());
-												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos())+"; ADP="+readDepth;
+												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupstart.getChr()+"; START="+Integer.toString(dupstart.getPos())+"; END="+Integer.toString(dupend.getPos())+"; ADP="+readDepth;
 												newComplexEvent.setInfo(tempInfo);
+												newComplexEvent.setCoord(insert);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											} else {
 												//duplication upstream of currentNode
@@ -982,8 +987,9 @@ public class Genotyper {
 //												}
 												double readDepth = getReadDepth(samReader, dupstart.getChr(), dupstart.getPos(), dupend.getPos());
 												//tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos());
-												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupend.getChr()+"; END="+Integer.toString(dupend.getPos())+"; ADP="+readDepth;
+												tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+dupstart.getChr()+"; START="+Integer.toString(dupstart.getPos())+"; END="+Integer.toString(dupend.getPos())+"; ADP="+readDepth;
 												newComplexEvent.setInfo(tempInfo);
+												newComplexEvent.setCoord(insert);
 												//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 											}
 											
@@ -1036,8 +1042,9 @@ public class Genotyper {
 //											tempInfo.replace(tmpOld, tmpNew);
 //											newComplexEvent.setInfo(tempInfo);
 //										}
-										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventEnd.getChr()+"; END="+Integer.toString(eventEnd.getPos());
+										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos());
 										newComplexEvent.setInfo(tempInfo);
+										newComplexEvent.setCoord(eventInsert);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									} else {
 										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
@@ -1062,8 +1069,9 @@ public class Genotyper {
 //											tempInfo.replace(tmpOld, tmpNew);
 //											newComplexEvent.setInfo(tempInfo);
 //										}
-										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventEnd.getChr()+"; END="+Integer.toString(eventEnd.getPos());
+										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos());
 										newComplexEvent.setInfo(tempInfo);
+										newComplexEvent.setCoord(eventInsert);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									}
 								}
@@ -1103,8 +1111,9 @@ public class Genotyper {
 //											tempInfo.replace(tmpOld, tmpNew);
 //											newComplexEvent.setInfo(tempInfo);
 //										}
-										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventEnd.getChr()+"; END="+Integer.toString(eventEnd.getPos());
+										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos());
 										newComplexEvent.setInfo(tempInfo);
+										newComplexEvent.setCoord(eventInsert);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									} else {
 										newComplexEvent = new ComplexEvent(eventStart, eventEnd, EVENT_TYPE.COMPLEX_INTERCHROMOSOMAL_INVERTED_DUPLICATION, new Event[] {e1, e2}, currentNode, eventInsert);
@@ -1129,8 +1138,9 @@ public class Genotyper {
 //											tempInfo.replace(tmpOld, tmpNew);
 //											newComplexEvent.setInfo(tempInfo);
 //										}
-										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventEnd.getChr()+"; END="+Integer.toString(eventEnd.getPos());
+										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos());
 										newComplexEvent.setInfo(tempInfo);
+										newComplexEvent.setCoord(eventInsert);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
 									}
 								}
