@@ -9,6 +9,12 @@ public class ComplexEvent extends Event{
 		this.eventsInvolvedInComplexEvent = involvedEvents;
 		super.setNode(hostingNode, true);
 		super.setNode(hostingNode, false);
+		
+	}
+	public ComplexEvent(GenomicCoordinate c1, GenomicCoordinate c2,
+			EVENT_TYPE type, Event[] involvedEvents, GenomicNode hostingNode, GenomicCoordinate insertionPoint) {
+		this(c1,c2,type,involvedEvents,hostingNode);
+		this.insertionPoint = insertionPoint;
 		switch (type) {
 		case COMPLEX_TRANSLOCATION:
 		case COMPLEX_DUPLICATION:
@@ -24,11 +30,6 @@ public class ComplexEvent extends Event{
 		default:
 			break;
 		}
-	}
-	public ComplexEvent(GenomicCoordinate c1, GenomicCoordinate c2,
-			EVENT_TYPE type, Event[] involvedEvents, GenomicNode hostingNode, GenomicCoordinate insertionPoint) {
-		this(c1,c2,type,involvedEvents,hostingNode);
-		this.insertionPoint = insertionPoint;
 	}
 
 	public Event[] getEventsInvolvedInComplexEvent(){
