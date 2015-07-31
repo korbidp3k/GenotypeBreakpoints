@@ -6,6 +6,7 @@ import java.util.HashSet;
 
 public class GenomicNode implements Comparable<GenomicNode>{
 	private static int global_node_id_counter = 0;
+	public static int global_event_merge_counter = 0;
 
 	private GenomicCoordinate start, end;
 	private ArrayList<Event> events;
@@ -87,6 +88,7 @@ public class GenomicNode implements Comparable<GenomicNode>{
 				//if(Event.sameNodeSets(e1,e2) && e1.getType() == e2.getType()){
 					//System.out.println("Redundant events identified: "+e1+" "+e2);
 					redundantEvents.add(e2);
+					global_event_merge_counter++;
 				}
 			}
 		}

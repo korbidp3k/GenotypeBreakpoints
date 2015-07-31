@@ -685,8 +685,9 @@ public class Genotyper {
 				}
 			}
 			lastNode.checkForRedundantEvents(maxDistanceForNodeMerge);
-			System.out.println("Nodes Merged: "+nodesMerged);
+			System.out.println("Nodes merged: "+nodesMerged);
 		}
+		System.out.println("Events merged: "+GenomicNode.global_event_merge_counter);
 		
 		//String goldStandard = args[1].substring(0, 22)+"_2.fa";
 		//String goldStandard = "/home/users/allstaff/schroeder/GenotypeBreakpoints/data/ecoli/SV_list_2.txt";
@@ -1042,7 +1043,8 @@ public class Genotyper {
 //											tempInfo.replace(tmpOld, tmpNew);
 //											newComplexEvent.setInfo(tempInfo);
 //										}
-										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos());
+										double readDepth = getReadDepth(samReader, eventStart.getChr(), eventStart.getPos(), eventEnd.getPos());
+										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos())+"; ADP="+readDepth;
 										newComplexEvent.setInfo(tempInfo);
 										newComplexEvent.setCoord(eventInsert);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
@@ -1069,7 +1071,8 @@ public class Genotyper {
 //											tempInfo.replace(tmpOld, tmpNew);
 //											newComplexEvent.setInfo(tempInfo);
 //										}
-										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos());
+										double readDepth = getReadDepth(samReader, eventStart.getChr(), eventStart.getPos(), eventEnd.getPos());
+										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos())+"; ADP="+readDepth;
 										newComplexEvent.setInfo(tempInfo);
 										newComplexEvent.setCoord(eventInsert);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
@@ -1111,7 +1114,8 @@ public class Genotyper {
 //											tempInfo.replace(tmpOld, tmpNew);
 //											newComplexEvent.setInfo(tempInfo);
 //										}
-										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos());
+										double readDepth = getReadDepth(samReader, eventStart.getChr(), eventStart.getPos(), eventEnd.getPos());
+										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos())+"; ADP="+readDepth;
 										newComplexEvent.setInfo(tempInfo);
 										newComplexEvent.setCoord(eventInsert);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
@@ -1138,7 +1142,8 @@ public class Genotyper {
 //											tempInfo.replace(tmpOld, tmpNew);
 //											newComplexEvent.setInfo(tempInfo);
 //										}
-										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos());
+										double readDepth = getReadDepth(samReader, eventStart.getChr(), eventStart.getPos(), eventEnd.getPos());
+										tempInfo="SVTYPE="+newComplexEvent.getAlt().substring(1, 4)+"; CHR2="+eventStart.getChr()+"; START="+Integer.toString(eventStart.getPos())+"; END="+Integer.toString(eventEnd.getPos())+"; ADP="+readDepth;
 										newComplexEvent.setInfo(tempInfo);
 										newComplexEvent.setCoord(eventInsert);
 										//writer.write(newComplexEvent.getC1().getChr()+"\t"+newComplexEvent.getC1().getPos()+"\t"+newComplexEvent.getId()+"\t"+newComplexEvent.getRef()+"\t"+newComplexEvent.getAlt()+"\t"+newComplexEvent.getQual()+"\t"+newComplexEvent.getFilter()+"\t"+newComplexEvent.getInfo()+"\n");
